@@ -305,18 +305,9 @@ void demo(char *cfgfile, char *weightfile, float thresh, float hier_thresh, int 
     free(avg);
     for (j = 0; j < NFRAMES; ++j) free(predictions[j]);
     for (j = 0; j < NFRAMES; ++j) free_image(images[j]);
-
+  
     free_ptrs((void **)names, net.layers[net.n - 1].classes);
-
-    int i;
-    const int nsize = 8;
-    for (j = 0; j < nsize; ++j) {
-        for (i = 32; i < 127; ++i) {
-            free_image(alphabet[j][i]);
-        }
-        free(alphabet[j]);
-    }
-    free(alphabet);
+    free_alphabet(alphabet);
     free_network(net);
     //cudaProfilerStop();
 }
