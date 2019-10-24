@@ -1421,6 +1421,76 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
     free_network(net);
 }
 
+void test_headless(char *datacfg, char *cfgfile, char *weightfile, float thresh, float hier_thresh, char *in_filename, char *out_filename)
+{
+
+    char *name_list = datacfg;
+    int names_size = 0;
+    char **names = get_labels_custom(name_list, &names_size); //get_labels(name_list);
+
+    network net = parse_network_cfg_custom(cfgfile, 1, 0); // set batch=1
+    if(weightfile){
+        load_weights(&net, weightfile);
+    }
+    //set_batch_network(&net, 1);
+    fuse_conv_batchnorm(net);
+    calculate_binary_weights(net);
+    if (net.layers[net.n - 1].classes != names_size) {
+        printf(" Error: in the file %s number of names %d that isn't equal to classes=%d in the file %s \n",
+            name_list, names_size, net.layers[net.n - 1].classes, cfgfile);
+        if(net.layers[net.n - 1].classes > names_size) getchar();
+    }
+   srand(2222222);
+
+    char input[1024];
+    float nms=.45;    // 0.4F
+
+    FILE *outputfile;
+    FILE *inputfile;
+    inputfile = fopen(in_filename, "r");
+    outputfile = fopen(out_filename, "w");
+    printf("Headless operation - writing all output to: %s \n", out_filename);
+    fprintf(outputfile, "{\n\"darknet headless output\":\n");
+    fprintf(outputfile, "[\n");
+    int first = 1;
+    while(fgets(input, 1024, inputfile) != NULL){
+        if(first == 0){
+               fprintf(outputfile, ",\n");
+        }
+        int len = strlen(input);
+        if( input[len-1] == '\n' )
+            input[len-1] = 0;
+        image im = load_image(input,0,0,net.c);
+        int letterbox = 0;
+        image sized = resize_image(im, net.w, net.h);
+        layer l = net.layers[net.n-1];
+        float *X = sized.data;
+
+        network_predict(net, X);
+
+        printf("%s: Predicted \n", input);
+
+        int nboxes = 0;
+        detection *dets = get_network_boxes(&net, im.w, im.h, thresh, hier_thresh, 0, 1, &nboxes, letterbox);
+        if (nms) do_nms_sort(dets, nboxes, l.classes, nms);
+        single_json(im, dets, nboxes, thresh, names, l.classes, input, outputfile);
+        first = 0;
+            // free memory
+        free_detections(dets, nboxes);
+        free_image(im);
+        free_image(sized);
+
+    }
+
+    fprintf(outputfile, "\n]\n}");
+    fclose(outputfile);
+    fclose(inputfile);
+
+    free_ptrs(names, net.layers[net.n - 1].classes);
+    free_network(net);
+
+}
+
 void run_detector(int argc, char **argv)
 {
     int dont_show = find_arg(argc, argv, "-dont_show");
@@ -1432,6 +1502,7 @@ void run_detector(int argc, char **argv)
     int show_imgs = find_arg(argc, argv, "-show_imgs");
     int mjpeg_port = find_int_arg(argc, argv, "-mjpeg_port", -1);
     int json_port = find_int_arg(argc, argv, "-json_port", -1);
+    char *in_filename = find_char_arg(argc, argv, "-in_filename", 0);
     char *out_filename = find_char_arg(argc, argv, "-out_filename", 0);
     char *outfile = find_char_arg(argc, argv, "-out", 0);
     char *prefix = find_char_arg(argc, argv, "-prefix", 0);
@@ -1504,5 +1575,6 @@ void run_detector(int argc, char **argv)
         free_list_contents_kvp(options);
         free_list(options);
     }
+    else if(0==strcmp(argv[2], "test_headless")) test_headless(datacfg, cfg, weights, thresh, hier_thresh, in_filename, out_filename);
     else printf(" There isn't such command: %s", argv[2]);
 }

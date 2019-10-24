@@ -716,3 +716,63 @@ public:
 #endif
 };
 ```
+----
+
+Fork description: 
+
+Bulk processing of an input file containing image paths into a json-formatted output file containing all darknet yolo predictions of all the input images.
+
+Based on AlexeyAB's darknet fork:
+
+I created a new test phase: **test_headless** which takes a  **names** file, **cfg** file and **weights** file, with an input file (with image paths) and output json file, like so: 
+
+`./darknet detector test_headless data/openimages.names cfg/yolov3-openimages.cfg ../yolov3-openimages.weights -in_filename input.txt -out_filename output.json`
+
+example output:
+```javascript
+{
+    "darknet headless output": [
+        {
+            "fileName": "/Users/gpsmit/Downloads/marine.jpg",
+            "predictions": [
+                {
+                    "height": 332,
+                    "labels": [
+                        {
+                            "label": "Clothing",
+                            "score": 30.192739
+                        }
+                    ],
+                    "left_x": 4,
+                    "top_y": 137,
+                    "width": 482
+                },
+                {
+                    "height": 375,
+                    "labels": [
+                        {
+                            "label": "Person",
+                            "score": 40.249172
+                        }
+                    ],
+                    "left_x": 13,
+                    "top_y": 84,
+                    "width": 471
+                },
+                {
+                    "height": 216,
+                    "labels": [
+                        {
+                            "label": "Weapon",
+                            "score": 32.131096
+                        }
+                    ],
+                    "left_x": 237,
+                    "top_y": 190,
+                    "width": 652
+                }
+            ]
+        }
+    ]
+}
+```
