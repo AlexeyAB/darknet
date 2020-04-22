@@ -7,54 +7,6 @@ import numpy as np
 import time
 
 
-def translate(image, x, y):
-    # define the translation matrix and perform the translation
-    M = np.float32([[1, 0, x], [0, 1, y]])
-    shifted = cv2.warpAffine(image, M, (image.shape[1], image.shape[0]))
-
-    # return the translated image
-    return shifted
-
-def rotate(image, angle, center=None, scale=1.0):
-    # grab the dimensions of the image
-    (h, w) = image.shape[:2]
-
-    # if the center is None, initialize it as the center of
-    # the image
-    if center is None:
-        center = (w // 2, h // 2)
-
-    # perform the rotation
-    M = cv2.getRotationMatrix2D(center, angle, scale)
-    rotated = cv2.warpAffine(image, M, (w, h))
-
-    # return the rotated image
-    return rotated
-
-def rotate_bound(image, angle):
-    # grab the dimensions of the image and then determine the
-    # center
-    (h, w) = image.shape[:2]
-    (cX, cY) = (w // 2, h // 2)
- 
-    # grab the rotation matrix (applying the negative of the
-    # angle to rotate clockwise), then grab the sine and cosine
-    # (i.e., the rotation components of the matrix)
-    M = cv2.getRotationMatrix2D((cX, cY), -angle, 1.0)
-    cos = np.abs(M[0, 0])
-    sin = np.abs(M[0, 1])
- 
-    # compute the new bounding dimensions of the image
-    nW = int((h * sin) + (w * cos))
-    nH = int((h * cos) + (w * sin))
- 
-    # adjust the rotation matrix to take into account translation
-    M[0, 2] += (nW / 2) - cX
-    M[1, 2] += (nH / 2) - cY
- 
-    # perform the actual rotation and return the image
-    return cv2.warpAffine(image, M, (nW, nH))
-
 def sample(probs):
     s = sum(probs)
     probs = [a/s for a in probs]
@@ -304,9 +256,9 @@ altNames = None
 
 def YOLO():
     global metaMain, netMain, altNames
-    configPath = "./gun/yolov3_gun.cfg"
-    weightPath = "./gun2/yolov3_gun_1000.weights"
-    metaPath = "./gun/gun.data"
+    configPath = "./cfg/yolov3.cfg"
+    weightPath = "./yolov3.weights"
+    metaPath = "./cfg/coco.data"
     if not os.path.exists(configPath):
         raise ValueError("Invalid config path `" +
                          os.path.abspath(configPath)+"`")
@@ -342,21 +294,17 @@ def YOLO():
         except Exception:
             pass
     #cap = cv2.VideoCapture(0)
-    #rtsp://admin:admin@192.168.0.184:554/11/
-    cap = cv2.VideoCapture("/home/anerudh/gun/demo_test_vids/Video_1.MOV") #0) #"Video.mp4")
+    cap = cv2.VideoCapture("snippet1.mp4")
     cap.set(3, 1280)
     cap.set(4, 720)
     out = cv2.VideoWriter(
-        "demo_test_1_gun2_1000.avi", cv2.VideoWriter_fourcc(*"MJPG"), 10.0,
+        "output_dar_snippet.avi", cv2.VideoWriter_fourcc(*"MJPG"), 10.0,
         (lib.network_width(netMain), lib.network_height(netMain)))
     print("Starting the YOLO loop...")
     while True:
         prev_time = time.time()
         ret, frame_read = cap.read()
-        # if(frame_read.shape[0]!=None):
-        #     break
-        frame_rgb = cv2.cvtColor(rotate_bound(frame_read,90), cv2.COLOR_BGR2RGB)
-        # frame_rgb = cv2.cvtColor(cv2.flip(frame_read,3), cv2.COLOR_BGR2RGB)
+        frame_rgb = cv2.cvtColor(frame_read, cv2.COLOR_BGR2RGB)
         frame_resized = cv2.resize(frame_rgb,
                                    (lib.network_width(netMain),
                                     lib.network_height(netMain)),

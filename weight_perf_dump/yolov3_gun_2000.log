@@ -1,0 +1,18 @@
+
+ seen 64 
+
+ calculation mAP (mean average precision)...
+
+ detections_count = 934, unique_truth_count = 828  
+ rank = 0 of ranks = 934  rank = 100 of ranks = 934  rank = 200 of ranks = 934  rank = 300 of ranks = 934  rank = 400 of ranks = 934  rank = 500 of ranks = 934  rank = 600 of ranks = 934  rank = 700 of ranks = 934  rank = 800 of ranks = 934  rank = 900 of ranks = 934 class_id = 0, name = gun, ap = 99.12%   	 (TP = 818, FP = 4) 
+
+ for thresh = 0.25, precision = 1.00, recall = 0.99, F1-score = 0.99 
+ for thresh = 0.25, TP = 818, FP = 4, FN = 10, average IoU = 78.23 % 
+
+ IoU threshold = 50 %, used Area-Under-Curve for each unique Recall 
+ mean average precision (mAP@0.50) = 0.991185, or 99.12 % 
+
+Set -points flag:
+ `-points 101` for MS COCO 
+ `-points 11` for PascalVOC 2007 (uncomment `difficult` in voc.data) 
+ `-points 0` (AUC) for ImageNet, PascalVOC 2010-2012, your custom dataset

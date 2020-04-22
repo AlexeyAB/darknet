@@ -312,6 +312,7 @@ def detect_image(net, meta, im, thresh=.5, hier_thresh=.5, nms=.45, debug= False
 netMain = None
 metaMain = None
 altNames = None
+import time
 
 def performDetect(imagePath="data/dog.jpg", thresh= 0.25, configPath = "./cfg/yolov3.cfg", weightPath = "yolov3.weights", metaPath= "./cfg/coco.data", showImage= True, makeImageOnly = False, initOnly= False):
     """
@@ -401,7 +402,10 @@ def performDetect(imagePath="data/dog.jpg", thresh= 0.25, configPath = "./cfg/yo
         raise ValueError("Invalid image path `"+os.path.abspath(imagePath)+"`")
     # Do the detection
     #detections = detect(netMain, metaMain, imagePath, thresh)	# if is used cv2.imread(image)
+    t1=time.time()
     detections = detect(netMain, metaMain, imagePath.encode("ascii"), thresh)
+    t2=time.time()-t1
+    print(t2)
     if showImage:
         try:
             from skimage import io, draw

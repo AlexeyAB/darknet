@@ -753,3 +753,28 @@ public:
 #endif
 };
 ```
+
+#######################################################  Instructions for early stopping of training based on mAP ###################################################################
+
+-In darknet/ folder you will find map_plots_early_stop.csv and paralleize.py. In weight_perf_dump/ find plot_multi.conf. This is a configuration file containing all required 
+   parametres for early stopping. 
+-Make appropriate changes to .data and .cfg used for training and testing/inference.
+-Run parallelize.py using 'python paralleize.py' or 'sudo python parallelize.py' after deleting map_plots_early_stop.csv and the weights and log files dumped in BACKUP folder.
+-All outputs are dumped in to map_plots_early_stop.csv.
+
+
+#####################################################################################################################################################################################
+
+
+#######################################################  Instructions for postprocessing weight files for best mAP ##################################################################
+
+
+-For calculating the best mAP and related iterations from existing weigh files.
+-For all the paths required such as, path to weight files, cfg file, data file go to plot.conf
+-First, delete all .pckl and .log files in the darknet/ folder, then run dump_csv.py. This produces .pckl and .log files for the weights in the mentioned path and produces the 
+  .csv file with headers for the weight iteration, AP for each objects, F1-score and mAP in each line for ewach weight file.
+-Then, run calc_best_map.py. This uses the csv file created by dump_csv.py and implements stopping conditions with parametres mentioned in plot.conf. The best mAP, the corrsponding 
+   iteration and epoch are printed out
+
+
+#####################################################################################################################################################################################
