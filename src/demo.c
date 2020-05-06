@@ -242,10 +242,15 @@ void demo(char *cfgfile, char *weightfile, float thresh, float hier_thresh, int 
     double start_time = get_time_point();
     float avg_fps = 0;
     int frame_counter = 0;
-
+    int flag_pause = 0;
     while(1){
         ++count;
         {
+            if (flag_pause != 0) {
+                int c = wait_key_cv(1);
+                flag_pause = c != 32;
+                continue;
+            }
             const float nms = .45;    // 0.4F
             int local_nboxes = nboxes;
             detection *local_dets = dets;
@@ -301,6 +306,7 @@ void demo(char *cfgfile, char *weightfile, float thresh, float hier_thresh, int 
                     {
                         flag_exit = 1;
                     }
+                    flag_pause = c == 32;
                 }
             }else{
                 char buff[256];
