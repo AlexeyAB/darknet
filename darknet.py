@@ -116,16 +116,16 @@ if os.name == "nt":
             # print("FORCE_CPU flag undefined, proceeding with GPU")
         if not os.path.exists(winGPUdll):
             raise ValueError("NoDLL")
-        lib = CDLL(winGPUdll, RTLD_GLOBAL)
+        lib = CDLL(winGPUdll, winmode = 0, mode = RTLD_GLOBAL)
     except (KeyError, ValueError):
         hasGPU = False
         if os.path.exists(winNoGPUdll):
-            lib = CDLL(winNoGPUdll, RTLD_GLOBAL)
+            lib = CDLL(winNoGPUdll, winmode = 0, mode = RTLD_GLOBAL)
             print("Notice: CPU-only mode")
         else:
             # Try the other way, in case no_gpu was
             # compile but not renamed
-            lib = CDLL(winGPUdll, RTLD_GLOBAL)
+            lib = CDLL(winGPUdll, winmode = 0, mode = RTLD_GLOBAL)
             print("Environment variables indicated a CPU run, but we didn't find `"+winNoGPUdll+"`. Trying a GPU run anyway.")
 else:
     lib = CDLL("./libdarknet.so", RTLD_GLOBAL)
