@@ -703,7 +703,15 @@ There are 2 APIs:
 * C API: https://github.com/AlexeyAB/darknet/blob/master/include/darknet.h
     * Python examples using the C API::     
          * https://github.com/AlexeyAB/darknet/blob/master/darknet.py	
+         * https://github.com/AlexeyAB/darknet/blob/master/darknet_detector.py	
          * https://github.com/AlexeyAB/darknet/blob/master/darknet_video.py
+    * To install python libraries, run:
+      ```
+      python3 -m venv dark
+      source dark/bin/activiate
+      python -m pip install --editable .
+      ```
+         
     
 * C++ API: https://github.com/AlexeyAB/darknet/blob/master/include/yolo_v2_class.hpp
     * C++ example that uses C++ API: https://github.com/AlexeyAB/darknet/blob/master/src/yolo_console_dll.cpp
