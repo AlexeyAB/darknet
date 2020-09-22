@@ -60,21 +60,17 @@ def set_saved_video(input_video, output_video, size):
     return video
 
 
-def video_capture(frame_queue, darknet_image_queue):
+def video_capture():
     while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
+        _, frame = cap.read()
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame_resized = cv2.resize(frame_rgb, (width, height),
                                    interpolation=cv2.INTER_LINEAR)
         frame_queue.put(frame_resized)
         darknet.copy_image_from_bytes(darknet_image, frame_resized.tobytes())
         darknet_image_queue.put(darknet_image)
-    cap.release()
 
-
-def inference(darknet_image_queue, detections_queue, fps_queue):
+def inference():
     while cap.isOpened():
         darknet_image = darknet_image_queue.get()
         prev_time = time.time()
@@ -84,10 +80,9 @@ def inference(darknet_image_queue, detections_queue, fps_queue):
         fps_queue.put(fps)
         print("FPS: {}".format(fps))
         darknet.print_detections(detections, args.ext_output)
-    cap.release()
 
 
-def drawing(frame_queue, detections_queue, fps_queue):
+def drawing():
     random.seed(3)  # deterministic bbox colors
     video = set_saved_video(cap, args.out_filename, (width, height))
     while cap.isOpened():
@@ -101,11 +96,14 @@ def drawing(frame_queue, detections_queue, fps_queue):
                 video.write(image)
             if not args.dont_show:
                 cv2.imshow('Inference', image)
-            if cv2.waitKey(fps) == 27:
-                break
-    cap.release()
-    video.release()
-    cv2.destroyAllWindows()
+
+        key = cv2.waitKey(fps) & 0xff
+
+        if key == ord('q') or key == 27 :
+            cap.release()
+            video.release()
+            cv2.destroyAllWindows()
+            break
 
 
 if __name__ == '__main__':
@@ -129,6 +127,7 @@ if __name__ == '__main__':
     darknet_image = darknet.make_image(width, height, 3)
     input_path = str2int(args.input)
     cap = cv2.VideoCapture(input_path)
-    Thread(target=video_capture, args=(frame_queue, darknet_image_queue)).start()
-    Thread(target=inference, args=(darknet_image_queue, detections_queue, fps_queue)).start()
-    Thread(target=drawing, args=(frame_queue, detections_queue, fps_queue)).start()
+    time.sleep(2)
+    Thread(target=video_capture, args=()).start()
+    Thread(target=inference, args=()).start()
+    Thread(target=drawing, args=()).start()
