@@ -392,6 +392,16 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
             char buff[256];
             sprintf(buff, "%s/%s_%d.weights", backup_directory, base, iteration);
             save_weights(net, buff);
+            
+            //save text file with current loss and avg scores.
+			sprintf(buff, "%s/progress.txt", backup_directory);
+			FILE *fp = NULL;
+			fp = fopen(buff, "a");
+			if (fp != NULL)
+			{
+				fprintf(fp, "%d: %f, %f avg, %f rate, %lf seconds, %d images\n", i, loss, avg_loss, get_current_rate(net), sec(clock() - time), i*imgs);
+				fclose(fp);
+			}            
         }
 
         if (iteration >= (iter_save_last + 100) || (iteration % 100 == 0 && iteration > 1)) {
