@@ -517,9 +517,11 @@ It will create `.txt`-file for each `.jpg`-image-file - in the same directory an
     * for `enet-coco.cfg (EfficientNetB0-Yolov3)` (14 MB): [enetb0-coco.conv.132](https://drive.google.com/file/d/1uhh3D6RSn0ekgmsaTcl-ZW53WBaUDo6j/view?usp=sharing)
     
 
-8. Start training by using the command line: `darknet.exe detector train data/obj.data yolo-obj.cfg yolov4.conv.137`
+8. Start training by using the command line: `darknet.exe detector train build/darknet/x64/data/obj.data build/darknet/x64/cfg/yolo-obj.cfg build/darknet/x64/yolov4.conv.137`
+(i.e darknet.exe detector train (path-relative-to-darknet.exe obj.data) (path-relative-to-darknet.exe yolo-obj.cfg) (path-relative-to-darknet.exe yolov4.conv.137))
      
-   To train on Linux use command: `./darknet detector train data/obj.data yolo-obj.cfg yolov4.conv.137` (just use `./darknet` instead of `darknet.exe`)
+   To train on Linux use command: `./darknet detector train build/darknet/x64/data/obj.data train build/darknet/x64/cfg/yolo-obj.cfg train build/darknet/x64/yolov4.conv.137` (just use `./darknet` instead of `darknet.exe`)
+   (i.e ./darknet detector train (path-relative-to-darknet.exe obj.data) (path-relative-to-darknet.exe yolo-obj.cfg) (path-relative-to-darknet.exe yolov4.conv.137))
      
    * (file `yolo-obj_last.weights` will be saved to the `build\darknet\x64\backup\` for each 100 iterations)
    * (file `yolo-obj_xxxx.weights` will be saved to the `build\darknet\x64\backup\` for each 1000 iterations)
@@ -592,6 +594,8 @@ To get weights from Early Stopping Point:
 * `darknet.exe detector map data/obj.data yolo-obj.cfg backup\yolo-obj_8000.weights`
 * `darknet.exe detector map data/obj.data yolo-obj.cfg backup\yolo-obj_9000.weights`
 
+(i.e darknet.exe detector map (path-relative-to-darknet.exe obj.data) (path-relative-to-darknet.exe yolo-obj.cfg) (path-relative-to-darknet.exe yolo-obj_7000.weights))
+
 And comapre last output lines for each weights (7000, 8000, 9000):
 
 Choose weights-file **with the highest mAP (mean average precision)** or IoU (intersect over union)
@@ -623,6 +627,7 @@ In terms of Wiki, indicators Precision and Recall have a slightly different mean
 ### Custom object detection:
 
 Example of custom object detection: `darknet.exe detector test data/obj.data yolo-obj.cfg yolo-obj_8000.weights`
+(i.e darknet.exe detector test (path-relative-to-darknet.exe obj.data) (path-relative-to-darknet.exe yolo-obj.cfg) (path-relative-to-darknet.exe yolo-obj_8000.weights))
 
 | ![Yolo_v2_training](https://hsto.org/files/d12/1e7/515/d121e7515f6a4eb694913f10de5f2b61.jpg) | ![Yolo_v2_training](https://hsto.org/files/727/c7e/5e9/727c7e5e99bf4d4aa34027bb6a5e4bab.jpg) |
 |---|---|
