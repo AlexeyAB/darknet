@@ -1042,7 +1042,7 @@ image resize_min(image im, int min)
         w = (w * min) / h;
         h = min;
     }
-    if(w == im.w && h == im.h) return im;
+    if(w == im.w && h == im.h) return copy_image(im);
     image resized = resize_image(im, w, h);
     return resized;
 }
