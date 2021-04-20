@@ -47,6 +47,125 @@ typedef struct{
 
 list *read_cfg(char *filename);
 
+static size_t fread_floats(float *ptr, size_t nmemb, FILE *stream)
+{
+#if defined(__GNUC__) && defined(__FLOAT_WORD_ORDER__) && __FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
+    size_t i;
+    int read_words;
+
+    read_words = fread( ptr, sizeof(float), nmemb, stream );
+    for( i = 0; i < read_words; ++i ) {
+        ((uint32_t*)ptr)[i] = __builtin_bswap32( ((uint32_t*)ptr)[i] );
+    }
+    return read_words;
+#else
+    return fread( ptr, sizeof(float), nmemb, stream );
+#endif
+}
+
+static size_t fwrite_floats(const float *ptr, size_t nmemb, FILE *stream)
+{
+#if defined(__GNUC__) && defined(__FLOAT_WORD_ORDER__) &&__FLOAT_WORD_ORDER__ == __ORDER_BIG_ENDIAN__
+    size_t retn;
+    size_t i;
+    uint32_t * temp = xmalloc(sizeof(float)*nmemb);
+    for( i = 0; i < nmemb; ++i ) {
+        uint32_t word;
+        memcpy( &word, ptr+i, sizeof(word) );
+        word = __builtin_bswap32( word );
+        temp[i] = word;
+    }
+    retn = fwrite(temp, sizeof(float), nmemb, stream);
+    free( temp );
+    return retn;
+#else
+    return fwrite(ptr, sizeof(float), nmemb, stream);
+#endif
+}
+
+static size_t fread_uint64s( uint64_t * ptr, size_t nmemb, FILE *stream)
+{
+#if defined(__GNUC__) && defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    unsigned i;
+    size_t retn = fread( ptr, sizeof(uint64_t), nmemb, stream );
+    for( i = 0; i < nmemb; ++i ) {
+        ptr[i] = __builtin_bswap64( ptr[i] );
+    }
+    return retn;
+#else
+    return fread( ptr, sizeof(uint64_t), nmemb, stream );
+#endif
+}
+
+static size_t fwrite_uint64s(const uint64_t *ptr, size_t nmemb, FILE *stream)
+{
+#if defined(__GNUC__) && defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    size_t retn;
+    size_t i;
+    uint32_t * temp = xmalloc(sizeof(uint64_t)*nmemb);
+    for( i = 0; i < nmemb; ++i ) {
+        uint64_t word;
+        memcpy( &word, ptr+i, sizeof(word) );
+        word = __builtin_bswap64( word );
+        temp[i] = word;
+    }
+    retn = fwrite(temp, sizeof(uint64_t), nmemb, stream);
+    free( temp );
+    return retn;
+#else
+    return fwrite(ptr, sizeof(uint64_t), nmemb, stream);
+#endif
+}
+
+static size_t fread_uint32s( uint32_t * ptr, size_t nmemb, FILE *stream)
+{
+#if defined(__GNUC__) && defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    unsigned i;
+    size_t retn = fread( ptr, sizeof(uint32_t), nmemb, stream );
+    for( i = 0; i < nmemb; ++i ) {
+        ptr[i] = __builtin_bswap32( ptr[i] );
+    }
+    return retn;
+#else
+    return fread( ptr, sizeof(uint32_t), nmemb, stream );
+#endif
+}
+
+static size_t fread_int32s( int32_t * ptr, size_t nmemb, FILE *stream)
+{
+#if defined(__GNUC__) && defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    unsigned i;
+    size_t retn = fread( ptr, sizeof(int32_t), nmemb, stream );
+    for( i = 0; i < nmemb; ++i ) {
+        ptr[i] = __builtin_bswap32( ptr[i] );
+    }
+    return retn;
+#else
+    return fread( ptr, sizeof(int32_t), nmemb, stream );
+#endif
+}
+
+static size_t fwrite_int32s(const int32_t *ptr, size_t nmemb, FILE *stream)
+{
+#if defined(__GNUC__) && defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    size_t retn;
+    size_t i;
+    int32_t * temp = xmalloc(sizeof(int32_t)*nmemb);
+    for( i = 0; i < nmemb; ++i ) {
+        int32_t word;
+        memcpy( &word, ptr+i, sizeof(word) );
+        word = __builtin_bswap32( word );
+        temp[i] = word;
+    }
+    retn = fwrite(temp, sizeof(int32_t), nmemb, stream);
+    free( temp );
+    return retn;
+#else
+    return fwrite(ptr, sizeof(int32_t), nmemb, stream);
+#endif
+}
+
+
 LAYER_TYPE string_to_layer_type(char * type)
 {
 
@@ -1770,16 +1889,16 @@ void save_convolutional_weights_binary(layer l, FILE *fp)
     int size = (l.c/l.groups)*l.size*l.size;
     binarize_weights(l.weights, l.n, size, l.binary_weights);
     int i, j, k;
-    fwrite(l.biases, sizeof(float), l.n, fp);
+    fwrite_floats(l.biases, l.n, fp);
     if (l.batch_normalize){
-        fwrite(l.scales, sizeof(float), l.n, fp);
-        fwrite(l.rolling_mean, sizeof(float), l.n, fp);
-        fwrite(l.rolling_variance, sizeof(float), l.n, fp);
+        fwrite_floats(l.scales, l.n, fp);
+        fwrite_floats(l.rolling_mean, l.n, fp);
+        fwrite_floats(l.rolling_variance, l.n, fp);
     }
     for(i = 0; i < l.n; ++i){
         float mean = l.binary_weights[i*size];
         if(mean < 0) mean = -mean;
-        fwrite(&mean, sizeof(float), 1, fp);
+        fwrite_floats(&mean, 1, fp);
         for(j = 0; j < size/8; ++j){
             int index = i*size + j*8;
             unsigned char c = 0;
@@ -1807,7 +1926,7 @@ void save_shortcut_weights(layer l, FILE *fp)
     printf(" l.nweights = %d \n\n", l.nweights);
 
     int num = l.nweights;
-    fwrite(l.weights, sizeof(float), num, fp);
+    fwrite_floats(l.weights, num, fp);
 }
 
 void save_convolutional_weights(layer l, FILE *fp)
@@ -1822,16 +1941,16 @@ void save_convolutional_weights(layer l, FILE *fp)
     }
 #endif
     int num = l.nweights;
-    fwrite(l.biases, sizeof(float), l.n, fp);
+    fwrite_floats(l.biases, l.n, fp);
     if (l.batch_normalize){
-        fwrite(l.scales, sizeof(float), l.n, fp);
-        fwrite(l.rolling_mean, sizeof(float), l.n, fp);
-        fwrite(l.rolling_variance, sizeof(float), l.n, fp);
+        fwrite_floats(l.scales, l.n, fp);
+        fwrite_floats(l.rolling_mean, l.n, fp);
+        fwrite_floats(l.rolling_variance, l.n, fp);
     }
-    fwrite(l.weights, sizeof(float), num, fp);
+    fwrite_floats(l.weights, num, fp);
     //if(l.adam){
-    //    fwrite(l.m, sizeof(float), num, fp);
-    //    fwrite(l.v, sizeof(float), num, fp);
+    //    fwrite_floats(l.m, num, fp);
+    //    fwrite_floats(l.v, num, fp);
     //}
 }
 
@@ -1867,10 +1986,10 @@ void save_batchnorm_weights(layer l, FILE *fp)
         pull_batchnorm_layer(l);
     }
 #endif
-    fwrite(l.biases, sizeof(float), l.c, fp);
-    fwrite(l.scales, sizeof(float), l.c, fp);
-    fwrite(l.rolling_mean, sizeof(float), l.c, fp);
-    fwrite(l.rolling_variance, sizeof(float), l.c, fp);
+    fwrite_floats(l.biases, l.c, fp);
+    fwrite_floats(l.scales, l.c, fp);
+    fwrite_floats(l.rolling_mean, l.c, fp);
+    fwrite_floats(l.rolling_variance, l.c, fp);
 }
 
 void save_connected_weights(layer l, FILE *fp)
@@ -1880,12 +1999,12 @@ void save_connected_weights(layer l, FILE *fp)
         pull_connected_layer(l);
     }
 #endif
-    fwrite(l.biases, sizeof(float), l.outputs, fp);
-    fwrite(l.weights, sizeof(float), l.outputs*l.inputs, fp);
+    fwrite_floats(l.biases, l.outputs, fp);
+    fwrite_floats(l.weights, l.outputs*l.inputs, fp);
     if (l.batch_normalize){
-        fwrite(l.scales, sizeof(float), l.outputs, fp);
-        fwrite(l.rolling_mean, sizeof(float), l.outputs, fp);
-        fwrite(l.rolling_variance, sizeof(float), l.outputs, fp);
+        fwrite_floats(l.scales, l.outputs, fp);
+        fwrite_floats(l.rolling_mean, l.outputs, fp);
+        fwrite_floats(l.rolling_variance, l.outputs, fp);
     }
 }
 
@@ -1900,14 +2019,14 @@ void save_weights_upto(network net, char *filename, int cutoff, int save_ema)
     FILE *fp = fopen(filename, "wb");
     if(!fp) file_error(filename);
 
-    int major = MAJOR_VERSION;
-    int minor = MINOR_VERSION;
-    int revision = PATCH_VERSION;
-    fwrite(&major, sizeof(int), 1, fp);
-    fwrite(&minor, sizeof(int), 1, fp);
-    fwrite(&revision, sizeof(int), 1, fp);
+    int32_t major = MAJOR_VERSION;
+    int32_t minor = MINOR_VERSION;
+    int32_t revision = PATCH_VERSION;
+    fwrite_int32s(&major, 1, fp);
+    fwrite_int32s(&minor, 1, fp);
+    fwrite_int32s(&revision, 1, fp);
     (*net.seen) = get_current_iteration(net) * net.batch * net.subdivisions; // remove this line, when you will save to weights-file both: seen & cur_iteration
-    fwrite(net.seen, sizeof(uint64_t), 1, fp);
+    fwrite_uint64s(net.seen, 1, fp);
 
     int i;
     for(i = 0; i < net.n && i < cutoff; ++i){
@@ -1973,8 +2092,8 @@ void save_weights_upto(network net, char *filename, int cutoff, int save_ema)
 #endif
             int locations = l.out_w*l.out_h;
             int size = l.size*l.size*l.c*l.n*locations;
-            fwrite(l.biases, sizeof(float), l.outputs, fp);
-            fwrite(l.weights, sizeof(float), size, fp);
+            fwrite_floats(l.biases, l.outputs, fp);
+            fwrite_floats(l.weights, size, fp);
         }
     }
     fclose(fp);
@@ -1999,17 +2118,17 @@ void transpose_matrix(float *a, int rows, int cols)
 
 void load_connected_weights(layer l, FILE *fp, int transpose)
 {
-    fread(l.biases, sizeof(float), l.outputs, fp);
-    fread(l.weights, sizeof(float), l.outputs*l.inputs, fp);
+    fread_floats(l.biases, l.outputs, fp);
+    fread_floats(l.weights, l.outputs*l.inputs, fp);
     if(transpose){
         transpose_matrix(l.weights, l.inputs, l.outputs);
     }
     //printf("Biases: %f mean %f variance\n", mean_array(l.biases, l.outputs), variance_array(l.biases, l.outputs));
     //printf("Weights: %f mean %f variance\n", mean_array(l.weights, l.outputs*l.inputs), variance_array(l.weights, l.outputs*l.inputs));
     if (l.batch_normalize && (!l.dontloadscales)){
-        fread(l.scales, sizeof(float), l.outputs, fp);
-        fread(l.rolling_mean, sizeof(float), l.outputs, fp);
-        fread(l.rolling_variance, sizeof(float), l.outputs, fp);
+        fread_floats(l.scales, l.outputs, fp);
+        fread_floats(l.rolling_mean, l.outputs, fp);
+        fread_floats(l.rolling_variance, l.outputs, fp);
         //printf("Scales: %f mean %f variance\n", mean_array(l.scales, l.outputs), variance_array(l.scales, l.outputs));
         //printf("rolling_mean: %f mean %f variance\n", mean_array(l.rolling_mean, l.outputs), variance_array(l.rolling_mean, l.outputs));
         //printf("rolling_variance: %f mean %f variance\n", mean_array(l.rolling_variance, l.outputs), variance_array(l.rolling_variance, l.outputs));
@@ -2023,10 +2142,10 @@ void load_connected_weights(layer l, FILE *fp, int transpose)
 
 void load_batchnorm_weights(layer l, FILE *fp)
 {
-    fread(l.biases, sizeof(float), l.c, fp);
-    fread(l.scales, sizeof(float), l.c, fp);
-    fread(l.rolling_mean, sizeof(float), l.c, fp);
-    fread(l.rolling_variance, sizeof(float), l.c, fp);
+    fread_floats(l.biases, l.c, fp);
+    fread_floats(l.scales, l.c, fp);
+    fread_floats(l.rolling_mean, l.c, fp);
+    fread_floats(l.rolling_variance, l.c, fp);
 #ifdef GPU
     if(gpu_index >= 0){
         push_batchnorm_layer(l);
@@ -2036,17 +2155,17 @@ void load_batchnorm_weights(layer l, FILE *fp)
 
 void load_convolutional_weights_binary(layer l, FILE *fp)
 {
-    fread(l.biases, sizeof(float), l.n, fp);
+    fread_floats(l.biases, l.n, fp);
     if (l.batch_normalize && (!l.dontloadscales)){
-        fread(l.scales, sizeof(float), l.n, fp);
-        fread(l.rolling_mean, sizeof(float), l.n, fp);
-        fread(l.rolling_variance, sizeof(float), l.n, fp);
+        fread_floats(l.scales, l.n, fp);
+        fread_floats(l.rolling_mean, l.n, fp);
+        fread_floats(l.rolling_variance, l.n, fp);
     }
     int size = (l.c / l.groups)*l.size*l.size;
     int i, j, k;
     for(i = 0; i < l.n; ++i){
         float mean = 0;
-        fread(&mean, sizeof(float), 1, fp);
+        fread_floats(&mean, 1, fp);
         for(j = 0; j < size/8; ++j){
             int index = i*size + j*8;
             unsigned char c = 0;
@@ -2064,6 +2183,7 @@ void load_convolutional_weights_binary(layer l, FILE *fp)
 #endif
 }
 
+
 void load_convolutional_weights(layer l, FILE *fp)
 {
     if(l.binary){
@@ -2072,15 +2192,16 @@ void load_convolutional_weights(layer l, FILE *fp)
     }
     int num = l.nweights;
     int read_bytes;
-    read_bytes = fread(l.biases, sizeof(float), l.n, fp);
+    read_bytes = fread_floats(l.biases, l.n, fp);
+
     if (read_bytes > 0 && read_bytes < l.n) printf("\n Warning: Unexpected end of wights-file! l.biases - l.index = %d \n", l.index);
-    //fread(l.weights, sizeof(float), num, fp); // as in connected layer
+    //fread_floats(l.weights, num, fp); // as in connected layer
     if (l.batch_normalize && (!l.dontloadscales)){
-        read_bytes = fread(l.scales, sizeof(float), l.n, fp);
+        read_bytes = fread_floats(l.scales, l.n, fp);
         if (read_bytes > 0 && read_bytes < l.n) printf("\n Warning: Unexpected end of wights-file! l.scales - l.index = %d \n", l.index);
-        read_bytes = fread(l.rolling_mean, sizeof(float), l.n, fp);
+        read_bytes = fread_floats(l.rolling_mean, l.n, fp);
         if (read_bytes > 0 && read_bytes < l.n) printf("\n Warning: Unexpected end of wights-file! l.rolling_mean - l.index = %d \n", l.index);
-        read_bytes = fread(l.rolling_variance, sizeof(float), l.n, fp);
+        read_bytes = fread_floats(l.rolling_variance, l.n, fp);
         if (read_bytes > 0 && read_bytes < l.n) printf("\n Warning: Unexpected end of wights-file! l.rolling_variance - l.index = %d \n", l.index);
         if(0){
             int i;
@@ -2098,11 +2219,11 @@ void load_convolutional_weights(layer l, FILE *fp)
             fill_cpu(l.n, 0, l.rolling_variance, 1);
         }
     }
-    read_bytes = fread(l.weights, sizeof(float), num, fp);
+    read_bytes = fread_floats(l.weights, num, fp);
     if (read_bytes > 0 && read_bytes < l.n) printf("\n Warning: Unexpected end of wights-file! l.weights - l.index = %d \n", l.index);
     //if(l.adam){
-    //    fread(l.m, sizeof(float), num, fp);
-    //    fread(l.v, sizeof(float), num, fp);
+    //    fread_floats(l.m, num, fp);
+    //    fread_floats(l.v, num, fp);
     //}
     //if(l.c == 3) scal_cpu(num, 1./256, l.weights, 1);
     if (l.flipped) {
@@ -2120,7 +2241,7 @@ void load_shortcut_weights(layer l, FILE *fp)
 {
     int num = l.nweights;
     int read_bytes;
-    read_bytes = fread(l.weights, sizeof(float), num, fp);
+    read_bytes = fread_floats(l.weights, num, fp);
     if (read_bytes > 0 && read_bytes < num) printf("\n Warning: Unexpected end of wights-file! l.weights - l.index = %d \n", l.index);
     //for (int i = 0; i < l.nweights; ++i) printf(" %f, ", l.weights[i]);
     //printf(" read_bytes = %d \n\n", read_bytes);
@@ -2143,22 +2264,22 @@ void load_weights_upto(network *net, char *filename, int cutoff)
     FILE *fp = fopen(filename, "rb");
     if(!fp) file_error(filename);
 
-    int major;
-    int minor;
-    int revision;
-    fread(&major, sizeof(int), 1, fp);
-    fread(&minor, sizeof(int), 1, fp);
-    fread(&revision, sizeof(int), 1, fp);
+    int32_t major;
+    int32_t minor;
+    int32_t revision;
+    fread_int32s(&major, 1, fp);
+    fread_int32s(&minor, 1, fp);
+    fread_int32s(&revision, 1, fp);
     if ((major * 10 + minor) >= 2) {
         printf("\n seen 64");
         uint64_t iseen = 0;
-        fread(&iseen, sizeof(uint64_t), 1, fp);
+        fread_uint64s(&iseen, 1, fp);
         *net->seen = iseen;
     }
     else {
         printf("\n seen 32");
         uint32_t iseen = 0;
-        fread(&iseen, sizeof(uint32_t), 1, fp);
+        fread_uint32s(&iseen, 1, fp);
         *net->seen = iseen;
     }
     *net->cur_iteration = get_current_batch(*net);
@@ -2229,8 +2350,8 @@ void load_weights_upto(network *net, char *filename, int cutoff)
         if(l.type == LOCAL){
             int locations = l.out_w*l.out_h;
             int size = l.size*l.size*l.c*l.n*locations;
-            fread(l.biases, sizeof(float), l.outputs, fp);
-            fread(l.weights, sizeof(float), size, fp);
+            fread_floats(l.biases, l.outputs, fp);
+            fread_floats(l.weights, size, fp);
 #ifdef GPU
             if(gpu_index >= 0){
                 push_local_layer(l);
