@@ -5,6 +5,13 @@
 #include "matrix.h"
 
 #ifdef __cplusplus
+
+#ifdef OPENCV
+#include <opencv2/opencv.hpp>
+image mat_to_image(cv::Mat mat);
+cv::Mat image_to_mat(image img);
+#endif
+
 extern "C" {
 #endif
 
@@ -41,8 +48,6 @@ void release_mat(mat_cv **mat);
 // image ipl_to_image(mat_cv* src_ptr)
 // cv::Mat ipl_to_mat(IplImage *ipl)
 // IplImage *mat_to_ipl(cv::Mat mat)
-// Mat image_to_mat(image img)
-// image mat_to_image(cv::Mat mat)
 image mat_to_image_cv(mat_cv *mat);
 
 // Window
