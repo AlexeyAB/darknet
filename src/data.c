@@ -193,7 +193,6 @@ matrix load_image_augment_paths(char **paths, int n, int use_flip, int min, int 
     return X;
 }
 
-
 box_label *read_boxes(char *filename, int *n)
 {
     box_label* boxes = (box_label*)xcalloc(1, sizeof(box_label));
@@ -220,7 +219,57 @@ box_label *read_boxes(char *filename, int *n)
     float x, y, h, w;
     int id;
     int count = 0;
+    while (fscanf(file, "%d %f %f %f %f", &id, &x, &y, &w, &h) == 5) {
+        boxes = (box_label*)xrealloc(boxes, (count + 1) * sizeof(box_label));
+        boxes[count].track_id = count + img_hash;
+        //printf(" boxes[count].track_id = %d, count = %d \n", boxes[count].track_id, count);
+        boxes[count].id = id;
+        boxes[count].x = x;
+        boxes[count].y = y;
+        boxes[count].h = h;
+        boxes[count].w = w;
+        boxes[count].left = x - w / 2;
+        boxes[count].right = x + w / 2;
+        boxes[count].top = y - h / 2;
+        boxes[count].bottom = y + h / 2;
+        ++count;
+    }
+    fclose(file);
+    *n = count;
+    return boxes;
+}
+
+box_label *read_boxes_class(char *filename, int *n, int max_num_classes)
+{
+    box_label* boxes = (box_label*)xcalloc(1, sizeof(box_label));
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        printf("Can't open label file. (This can be normal only if you use MSCOCO): %s \n", filename);
+        //file_error(filename);
+        FILE* fw = fopen("bad.list", "a");
+        fwrite(filename, sizeof(char), strlen(filename), fw);
+        char *new_line = "\n";
+        fwrite(new_line, sizeof(char), strlen(new_line), fw);
+        fclose(fw);
+        if (check_mistakes) {
+            printf("\n Error in read_boxes_class() \n");
+            getchar();
+        }
+
+        *n = 0;
+        return boxes;
+    }
+    const int max_obj_img = 4000;// 30000;
+    const int img_hash = (custom_hash(filename) % max_obj_img)*max_obj_img;
+    //printf(" img_hash = %d, filename = %s; ", img_hash, filename);
+    float x, y, h, w;
+    int id;
+    int count = 0;
     while(fscanf(file, "%d %f %f %f %f", &id, &x, &y, &w, &h) == 5){
+        if (id >= max_num_classes) {
+            printf("Warn class %d >= %d on %s \n", id, max_num_classes, filename);
+            continue;
+        }
         boxes = (box_label*)xrealloc(boxes, (count + 1) * sizeof(box_label));
         boxes[count].track_id = count + img_hash;
         //printf(" boxes[count].track_id = %d, count = %d \n", boxes[count].track_id, count);
@@ -303,7 +352,7 @@ void fill_truth_swag(char *path, float *truth, int classes, int flip, float dx, 
     replace_image_to_label(path, labelpath);
 
     int count = 0;
-    box_label *boxes = read_boxes(labelpath, &count);
+    box_label *boxes = read_boxes_class(labelpath, &count, classes);
     randomize_boxes(boxes, count);
     correct_boxes(boxes, count, dx, dy, sx, sy, flip);
     float x,y,w,h;
@@ -337,7 +386,7 @@ void fill_truth_region(char *path, float *truth, int classes, int num_boxes, int
     replace_image_to_label(path, labelpath);
 
     int count = 0;
-    box_label *boxes = read_boxes(labelpath, &count);
+    box_label *boxes = read_boxes_class(labelpath, &count, classes);
     randomize_boxes(boxes, count);
     correct_boxes(boxes, count, dx, dy, sx, sy, flip);
     float x,y,w,h;
@@ -382,7 +431,7 @@ int fill_truth_detection(const char *path, int num_boxes, int truth_size, float 
 
     int count = 0;
     int i;
-    box_label *boxes = read_boxes(labelpath, &count);
+    box_label *boxes = read_boxes_class(labelpath, &count, classes);
     int min_w_h = 0;
     float lowest_w = 1.F / net_w;
     float lowest_h = 1.F / net_h;

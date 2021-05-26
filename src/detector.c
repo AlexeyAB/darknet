@@ -55,7 +55,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
         if (net_classes != names_size) {
             printf("\n Error: in the file %s number of names %d that isn't equal to classes=%d in the file %s \n",
                 name_list, names_size, net_classes, cfgfile);
-            if (net_classes > names_size) getchar();
+            //if (net_classes > names_size) getchar();
         }
         free_ptrs((void**)names, net_map.layers[net_map.n - 1].classes);
     }
@@ -880,6 +880,7 @@ void validate_detector_recall(char *datacfg, char *cfgfile, char *weightfile)
 
         int num_labels = 0;
         box_label *truth = read_boxes(labelpath, &num_labels);
+        printf("CI PASSA--\n");
         for (k = 0; k < nboxes; ++k) {
             if (dets[k].objectness > thresh) {
                 ++proposals;
@@ -962,7 +963,7 @@ float validate_detector_map(char *datacfg, char *cfgfile, char *weightfile, floa
     if (net.layers[net.n - 1].classes != names_size) {
         printf("\n Error: in the file %s number of names %d that isn't equal to classes=%d in the file %s \n",
             name_list, names_size, net.layers[net.n - 1].classes, cfgfile);
-        getchar();
+        //getchar();
     }
     srand(time(0));
     printf("\n calculation mAP (mean average precision)...\n");
@@ -1075,7 +1076,7 @@ float validate_detector_map(char *datacfg, char *cfgfile, char *weightfile, floa
             char labelpath[4096];
             replace_image_to_label(path, labelpath);
             int num_labels = 0;
-            box_label *truth = read_boxes(labelpath, &num_labels);
+            box_label *truth = read_boxes_class(labelpath, &num_labels, classes);
             int j;
             for (j = 0; j < num_labels; ++j) {
                 truth_classes_count[truth[j].id]++;
@@ -1091,7 +1092,7 @@ float validate_detector_map(char *datacfg, char *cfgfile, char *weightfile, floa
                 char labelpath_dif[4096];
                 replace_image_to_label(path_dif, labelpath_dif);
 
-                truth_dif = read_boxes(labelpath_dif, &num_labels_dif);
+                truth_dif = read_boxes_class(labelpath_dif, &num_labels_dif, classes);
             }
 
             const int checkpoint_detections_count = detections_count;
@@ -1450,8 +1451,9 @@ void calc_anchors(char *datacfg, int num_of_clusters, int width, int height, int
         char labelpath[4096];
         replace_image_to_label(path, labelpath);
 
+
         int num_labels = 0;
-        box_label *truth = read_boxes(labelpath, &num_labels);
+        box_label *truth = read_boxes_class(labelpath, &num_labels, classes);
         //printf(" new path: %s \n", labelpath);
         char *buff = (char*)xcalloc(6144, sizeof(char));
         for (j = 0; j < num_labels; ++j)
@@ -1620,7 +1622,7 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
     if (net.layers[net.n - 1].classes != names_size) {
         printf("\n Error: in the file %s number of names %d that isn't equal to classes=%d in the file %s \n",
             name_list, names_size, net.layers[net.n - 1].classes, cfgfile);
-        if (net.layers[net.n - 1].classes > names_size) getchar();
+        //if (net.layers[net.n - 1].classes > names_size) getchar();
     }
     srand(2222222);
     char buff[256];
@@ -1791,7 +1793,7 @@ void draw_object(char *datacfg, char *cfgfile, char *weightfile, char *filename,
     if (net.layers[net.n - 1].classes != names_size) {
         printf("\n Error: in the file %s number of names %d that isn't equal to classes=%d in the file %s \n",
             name_list, names_size, net.layers[net.n - 1].classes, cfgfile);
-        if (net.layers[net.n - 1].classes > names_size) getchar();
+        //if (net.layers[net.n - 1].classes > names_size) getchar();
     }
 
     srand(2222222);

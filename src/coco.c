@@ -294,7 +294,7 @@ void validate_coco_recall(char *cfgfile, char *weightfile)
 		replace_image_to_label(path, labelpath);
 
         int num_labels = 0;
-        box_label *truth = read_boxes(labelpath, &num_labels);
+        box_label *truth = read_boxes_class(labelpath, &num_labels, classes);
         for(k = 0; k < side*side*l.n; ++k){
             if(probs[k][0] > thresh){
                 ++proposals;
