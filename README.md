@@ -481,7 +481,7 @@ It will create `.txt`-file for each `.jpg`-image-file - in the same directory an
   Where: 
   * `<object-class>` - integer object number from `0` to `(classes-1)`
   * `<x_center> <y_center> <width> <height>` - float values **relative** to width and height of image, it can be equal from `(0.0 to 1.0]`
-  * for example: `<x> = <absolute_x> / <image_width>` or `<height> = <absolute_height> / <image_height>`
+  * for example: `<x_center> = <absolute_x> / <image_width>` or `<height> = <absolute_height> / <image_height>`
   * attention: `<x_center> <y_center>` - are center of rectangle (are not top-left corner)
 
   For example for `img1.jpg` you will be created `img1.txt` containing:
