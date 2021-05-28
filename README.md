@@ -223,6 +223,7 @@ You can get cfg-files by path: `darknet/cfg/`
 * **ONNX** on Jetson for YOLOv4: https://developer.nvidia.com/blog/announcing-onnx-runtime-for-jetson/
 * **TensorRT+tkDNN**: https://github.com/ceccocats/tkDNN#fps-results
 * **Deepstream 5.0 / TensorRT for YOLOv4** https://github.com/NVIDIA-AI-IOT/yolov4_deepstream or https://github.com/marcoslucianops/DeepStream-Yolo read [Yolo is natively supported in DeepStream 4.0](https://news.developer.nvidia.com/deepstream-sdk-4-now-available/) and [PDF](https://docs.nvidia.com/metropolis/deepstream/Custom_YOLO_Model_in_the_DeepStream_YOLO_App.pdf). Additionally [jkjung-avt/tensorrt_demos](https://github.com/jkjung-avt/tensorrt_demos) or [wang-xinyu/tensorrtx](https://github.com/wang-xinyu/tensorrtx)
+* **TensorRT for ScaledYOLOv4** [makaveli10/scaled-yolov4-tensorrt](https://github.com/makaveli10/scaled-yolov4-tensorrt)
 * **Triton Inference Server / TensorRT** https://github.com/isarsoft/yolov4-triton-tensorrt
 * **DirectML** https://github.com/microsoft/DirectML/tree/master/Samples/yolov4
 * **OpenCL** (Intel, AMD, Mali GPUs for macOS & GNU/Linux) https://github.com/sowson/darknet
