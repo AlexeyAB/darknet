@@ -302,6 +302,8 @@ On Linux find executable file `./darknet` in the root directory, while on Window
 * To calculate anchors: `darknet.exe detector calc_anchors data/obj.data -num_of_clusters 9 -width 416 -height 416`
 * To check accuracy mAP@IoU=50: `darknet.exe detector map data/obj.data yolo-obj.cfg backup\yolo-obj_7000.weights`
 * To check accuracy mAP@IoU=75: `darknet.exe detector map data/obj.data yolo-obj.cfg backup\yolo-obj_7000.weights -iou_thresh 0.75`
+* To save the cropped image of the object detected: [`uncomment the following lines of code`](https://github.com/AlexeyAB/darknet/blob/master/src/image_opencv.cpp#L980-L996)
+* To run inference on all the images in a folder: `./darknet detector test ./cfg/coco.data ./cfg/yolov4.cfg ./yolov4.weights -i 0 -thresh 0.25 --folder_inference ./result_img/` here `./result_img/` is the path of the folder in which the inference has to be done. the folder name can be anything, as long as it exists. After the inference the images will be moved to `./processed_files/`. To change the folder name or path, the changes cane be done [`here`](https://github.com/AlexeyAB/darknet/blob/master/src/detector.c#L1894).
 
 ##### For using network video-camera mjpeg-stream with any Android smartphone
 
