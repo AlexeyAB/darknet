@@ -164,68 +164,34 @@ void backward_network_gpu(network net, network_state state)
 
     state.workspace = net.workspace;
     int i;
+	  int counter = 0;
     float * original_input = state.input;
     float * original_delta = state.delta;
-    for(i = net.n-1; i >= 0; --i){
-        state.index = i;
-        layer l = net.layers[i];
-        if (l.stopbackward == 1) break;
-        if (l.stopbackward > get_current_iteration(net)) break;
-        if(i == 0){
-            state.input = original_input;
-            state.delta = original_delta;
-        }else{
-            layer prev = net.layers[i-1];
-            state.input = prev.output_gpu;
-            state.delta = prev.delta_gpu;
-            if (net.optimized_memory && !prev.keep_delta_gpu) {
-                state.delta = net.state_delta_gpu;
-            }
-        }
-        if (l.onlyforward) continue;
 
-        if (net.benchmark_layers) {
-            start_time = get_time_point();
-        }
+  	for (i = net.n - 1; i >= 0; --i) {
+	  	state.index = i;
+		  layer l = net.layers[i];
+		  if (l.stopbackward && i <= 74) break;
+	  	if (l.stopbackward && i > 74) {
+		  	counter++;
+	  		if (counter == 1) i = 94+1;
+		  	if (counter == 2)  i = 82+1;
+		  	if (counter == 3) break;
 
-        l.backward_gpu(l, state);
-
-        if (net.benchmark_layers) {
-            CHECK_CUDA(cudaDeviceSynchronize());
-            end_time = get_time_point();
-            const double took_time = (end_time - start_time) / 1000;
-            const double alpha = 0.9;
-            if (avg_time_per_layer[i].time == 0) {
-                avg_time_per_layer[i].layer_id = i;
-                avg_time_per_layer[i].layer_type = l.type;
-                avg_time_per_layer[i].time = took_time;
-            }
-            else avg_time_per_layer[i].time = avg_time_per_layer[i].time * alpha + took_time * (1 - alpha);
-
-            sorted_avg_time_per_layer[i] = avg_time_per_layer[i];
-            printf("\n bw-layer %d - type: %d - %lf ms - avg_time %lf ms \n", i, l.type, took_time, avg_time_per_layer[i].time);
-        }
-
-        if (i != 0) {
-            layer prev = net.layers[i - 1];
-            if (net.optimized_memory && state.delta && !prev.keep_delta_gpu) {
-                if (prev.delta_gpu != state.delta) simple_copy_ongpu(prev.outputs*prev.batch, state.delta, prev.delta_gpu);
-                fill_ongpu(prev.outputs*prev.batch, 0, net.state_delta_gpu, 1);
-            }
-        }
-
-        /*
-        if(i != 0)
-        {
-            layer l = net.layers[i - 1];
-            int state_delta_nan_inf = is_nan_or_inf(state.delta, l.outputs * l.batch);
-            int state_input_nan_inf = is_nan_or_inf(state.input, l.outputs * l.batch);
-            printf("\n i - %d  is_nan_or_inf(s.delta) = %d \n", i, state_delta_nan_inf);
-            printf(" i - %d  is_nan_or_inf(s.input) = %d \n", i, state_input_nan_inf);
-            if (state_delta_nan_inf || state_input_nan_inf) { printf(" found "); getchar(); }
-        }
-        */
-    }
+		  }
+	  	else {
+		  	if (i == 0) {
+			  	state.input = original_input;
+			  	state.delta = original_delta;
+		  	}
+		  	else {
+			  	layer prev = net.layers[i - 1];
+			  	state.input = prev.output_gpu;
+			  	state.delta = prev.delta_gpu;
+		  	}
+		  	l.backward_gpu(l, state);
+		  }
+	  }
 
     if (net.adversarial && net.attention)
     {
