@@ -391,7 +391,10 @@ if(BUILD_AS_CPP)
 endif()
 
 add_library(dark ${CMAKE_CURRENT_LIST_DIR}/include/yolo_v2_class.hpp ${CMAKE_CURRENT_LIST_DIR}/src/yolo_v2_class.cpp ${sources} ${headers} ${cuda_sources})
-set_target_properties(dark PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(dark PROPERTIES
+  C_STANDARD 11
+  POSITION_INDEPENDENT_CODE ON
+)
 if(ENABLE_CUDA)
   set_target_properties(dark PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 endif()
@@ -405,14 +408,17 @@ set_target_properties(dark PROPERTIES OUTPUT_NAME "darknet")
 
 if(OpenCV_FOUND AND OpenCV_VERSION VERSION_GREATER "3.0" AND BUILD_USELIB_TRACK)
   add_executable(uselib_track ${CMAKE_CURRENT_LIST_DIR}/src/yolo_console_dll.cpp)
+  set_property(TARGET uselib_track PROPERTY C_STANDARD 11)
 endif()
 
 add_executable(uselib ${CMAKE_CURRENT_LIST_DIR}/src/yolo_console_dll.cpp)
+set_property(TARGET uselib PROPERTY C_STANDARD 11)
 if(BUILD_AS_CPP)
   set_target_properties(uselib PROPERTIES LINKER_LANGUAGE CXX)
 endif()
 
 add_executable(darknet ${CMAKE_CURRENT_LIST_DIR}/src/darknet.c ${sources} ${headers} ${cuda_sources})
+set_property(TARGET darknet PROPERTY C_STANDARD 11)
 if(BUILD_AS_CPP)
   set_source_files_properties(${CMAKE_CURRENT_LIST_DIR}/src/darknet.c PROPERTIES LANGUAGE CXX)
   set_target_properties(darknet PROPERTIES LINKER_LANGUAGE CXX)
