@@ -523,6 +523,7 @@ void draw_detections(image im, int num, float thresh, box *boxes, float **probs,
     }
 }
 
+
 void transpose_image(image im)
 {
     assert(im.w == im.h);

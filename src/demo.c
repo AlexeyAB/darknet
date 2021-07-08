@@ -10,6 +10,7 @@
 #include "darknet.h"
 #ifdef WIN32
 #include <time.h>
+#include <stdlib.h>
 #include "gettimeofday.h"
 #else
 #include <sys/time.h>

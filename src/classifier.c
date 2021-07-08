@@ -8,6 +8,7 @@
 #include "dark_cuda.h"
 #ifdef WIN32
 #include <time.h>
+#include <stdlib.h>
 #include "gettimeofday.h"
 #else
 #include <sys/time.h>
@@ -1129,10 +1130,12 @@ void threat_classifier(char *datacfg, char *cfgfile, char *weightfile, int cam_i
         sprintf(buff, "tmp/threat_%06d", count);
         //save_image(out, buff);
 
-#ifndef _WIN32
-        printf("\033[2J");
-        printf("\033[1;1H");
-#endif
+		#ifdef WIN32
+				system("cls");
+		#else
+				printf("\033[2J");
+				printf("\033[1;1H");
+		#endif
         printf("\nFPS:%.0f\n",fps);
 
         for(i = 0; i < top; ++i){
@@ -1208,8 +1211,12 @@ void gun_classifier(char *datacfg, char *cfgfile, char *weightfile, int cam_inde
         float *predictions = network_predict(net, in_s.data);
         top_predictions(net, top, indexes);
 
-        printf("\033[2J");
-        printf("\033[1;1H");
+		#ifdef WIN32
+				system("cls");
+		#else
+				printf("\033[2J");
+				printf("\033[1;1H");
+		#endif
 
         int threat = 0;
         for(i = 0; i < sizeof(bad_cats)/sizeof(bad_cats[0]); ++i){
@@ -1308,10 +1315,13 @@ void demo_classifier(char *datacfg, char *cfgfile, char *weightfile, int cam_ind
         if(net.hierarchy) hierarchy_predictions(predictions, net.outputs, net.hierarchy, 1);
         top_predictions(net, top, indexes);
 
-#ifndef _WIN32
-        printf("\033[2J");
-        printf("\033[1;1H");
-#endif
+		#ifdef WIN32
+				system("cls");
+		#else
+				printf("\033[2J");
+				printf("\033[1;1H");
+		#endif
+        printf("\nFPS:%.0f\n",fps);
 
 
         if (!benchmark) {

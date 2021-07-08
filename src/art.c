@@ -6,6 +6,7 @@
 #include "classifier.h"
 #ifdef WIN32
 #include <time.h>
+#include <stdlib.h>
 #include "gettimeofday.h"
 #else
 #include <sys/time.h>
@@ -40,8 +41,12 @@ void demo_art(char *cfgfile, char *weightfile, int cam_index)
 
         float *p = network_predict(net, in_s.data);
 
-        printf("\033[2J");
-        printf("\033[1;1H");
+		#ifdef WIN32
+				system("cls");
+		#else
+				printf("\033[2J");
+				printf("\033[1;1H");
+		#endif
 
         float score = 0;
         for(i = 0; i < n; ++i){
