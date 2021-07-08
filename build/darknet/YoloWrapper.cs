@@ -9,16 +9,25 @@ namespace Darknet
         private const int MaxObjects = 1000;
 
         [DllImport(YoloLibraryName, EntryPoint = "init")]
-        private static extern int InitializeYolo(string configurationFilename, string weightsFilename, int gpu);
+        private static extern IntPtr InitializeYolo(string configurationFilename, string weightsFilename, int gpu);
 
         [DllImport(YoloLibraryName, EntryPoint = "detect_image")]
-        private static extern int DetectImage(string filename, ref BboxContainer container);
+        private static extern int DetectImage(IntPtr pDetector, string filename, float threshold, ref BboxContainer container);
 
         [DllImport(YoloLibraryName, EntryPoint = "detect_mat")]
-        private static extern int DetectImage(IntPtr pArray, int nSize, ref BboxContainer container);
+        private static extern int DetectImage(IntPtr pDetector, IntPtr pArray, int nSize, float threshold, ref BboxContainer container);
+
+        [DllImport(YoloLibraryName, EntryPoint = "get_net_width")]
+        private static extern int LibGetNetWidth(IntPtr pDetector);
+
+        [DllImport(YoloLibraryName, EntryPoint = "get_net_height")]
+        private static extern int LibGetNetHeight(IntPtr pDetector);
+
+        [DllImport(YoloLibraryName, EntryPoint = "get_net_color_depth")]
+        private static extern int LibGetNetColorDepth(IntPtr pDetector);
 
         [DllImport(YoloLibraryName, EntryPoint = "dispose")]
-        private static extern int DisposeYolo();
+        private static extern void DisposeYolo(IntPtr pDetector);
 
         [StructLayout(LayoutKind.Sequential)]
         public struct bbox_t
@@ -38,25 +47,37 @@ namespace Darknet
             public bbox_t[] candidates;
         }
 
+        private IntPtr pDetector;
+
         public YoloWrapper(string configurationFilename, string weightsFilename, int gpu)
         {
-            InitializeYolo(configurationFilename, weightsFilename, gpu);
+            pDetector = InitializeYolo(configurationFilename, weightsFilename, gpu);
         }
 
         public void Dispose()
         {
-            DisposeYolo();
+            if (pDetector != IntPtr.Zero)
+            {
+                DisposeYolo(pDetector);
+                pDetector = IntPtr.Zero;
+            }
         }
 
-        public bbox_t[] Detect(string filename)
+        public int NetworkWidth => LibGetNetWidth(pDetector);
+
+        public int NetworkHeight => LibGetNetHeight(pDetector);
+
+        public int NetworkColorDepth => LibGetNetColorDepth(pDetector);
+
+        public bbox_t[] Detect(string filename, float threshold = 0.2f)
         {
             var container = new BboxContainer();
-            var count = DetectImage(filename, ref container);
+            var count = DetectImage(pDetector, filename, threshold, ref container);
 
             return container.candidates;
         }
 
-        public bbox_t[] Detect(byte[] imageData)
+        public bbox_t[] Detect(byte[] imageData, float threshold = 0.2f)
         {
             var container = new BboxContainer();
 
@@ -67,7 +88,7 @@ namespace Darknet
             {
                 // Copy the array to unmanaged memory.
                 Marshal.Copy(imageData, 0, pnt, imageData.Length);
-                var count = DetectImage(pnt, imageData.Length, ref container);
+                var count = DetectImage(pDetector, pnt, imageData.Length, threshold, ref container);
                 if (count == -1)
                 {
                     throw new NotSupportedException($"{YoloLibraryName} has no OpenCV support");

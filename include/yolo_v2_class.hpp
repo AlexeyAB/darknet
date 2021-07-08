@@ -73,7 +73,7 @@ class Detector {
     std::string _cfg_filename, _weight_filename;
 public:
     const int cur_gpu_id;
-    float nms = .4;
+    float nms = .4f;
     bool wait_stream;
 
     LIB_API Detector(std::string cfg_filename, std::string weight_filename, int gpu_id = 0);

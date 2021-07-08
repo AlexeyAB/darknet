@@ -24,53 +24,55 @@ extern "C" {
 
 #define NFRAMES 3
 
-//static Detector* detector = NULL;
-static std::unique_ptr<Detector> detector;
+    LIB_API Detector *init(const char *configurationFilename, const char *weightsFilename, int gpu)
+    {
+        return new Detector(configurationFilename, weightsFilename, gpu);
+    }
 
-int init(const char *configurationFilename, const char *weightsFilename, int gpu)
-{
-    detector.reset(new Detector(configurationFilename, weightsFilename, gpu));
-    return 1;
-}
+    LIB_API void dispose(Detector *detector) {
+        if (detector != NULL) delete detector;
+        detector = NULL;
+    }
 
-int detect_image(const char *filename, bbox_t_container &container)
-{
-    std::vector<bbox_t> detection = detector->detect(filename);
-    for (size_t i = 0; i < detection.size() && i < C_SHARP_MAX_OBJECTS; ++i)
-        container.candidates[i] = detection[i];
-    return detection.size();
-}
+    LIB_API int detect_image(Detector *detector, const char *filename, float thresh, bbox_t_container &container)
+    {
+        std::vector<bbox_t> detection = detector->detect(filename);
+        for (size_t i = 0; i < detection.size() && i < C_SHARP_MAX_OBJECTS; ++i)
+            container.candidates[i] = detection[i];
+        return detection.size();
+    }
 
-int detect_mat(const uint8_t* data, const size_t data_length, bbox_t_container &container) {
 #ifdef OPENCV
-    std::vector<char> vdata(data, data + data_length);
-    cv::Mat image = imdecode(cv::Mat(vdata), 1);
-
-    std::vector<bbox_t> detection = detector->detect(image);
-    for (size_t i = 0; i < detection.size() && i < C_SHARP_MAX_OBJECTS; ++i)
-        container.candidates[i] = detection[i];
-    return detection.size();
+    LIB_API int detect_mat_ptr(Detector *detector, cv::Mat *image, float thresh, bbox_t_container &container) {
+        std::vector<bbox_t> detection = detector->detect(*image, thresh);
+        for (size_t i = 0; i < detection.size() && i < C_SHARP_MAX_OBJECTS; ++i)
+            container.candidates[i] = detection[i];
+        return detection.size();
 #else
-    return -1;
+    LIB_API int detect_mat_ptr(Detector *detector, const uint8_t *image, float thresh, bbox_t_container &container) {
+        return -1;
 #endif    // OPENCV
-}
+    }
 
-int dispose() {
-    //if (detector != NULL) delete detector;
-    //detector = NULL;
-    detector.reset();
-    return 1;
-}
-
-int get_device_count() {
-#ifdef GPU
-    int count = 0;
-    cudaGetDeviceCount(&count);
-    return count;
+    LIB_API int detect_mat(Detector *detector, const uint8_t* data, const size_t data_length, float thresh, bbox_t_container &container) {
+#ifdef OPENCV
+        std::vector<char> vdata(data, data + data_length);
+        cv::Mat image = imdecode(cv::Mat(vdata), 1);
+        return detect_mat_ptr(detector, &image, thresh, container);
 #else
-    return -1;
+        return -1;
+#endif    // OPENCV
+    }
+
+    LIB_API int get_device_count() {
+#ifdef GPU
+        int count = 0;
+        cudaGetDeviceCount(&count);
+        return count;
+#else
+        return -1;
 #endif	// GPU
-}
+    }
 
 bool built_with_cuda(){
 #ifdef GPU
@@ -97,16 +99,29 @@ bool built_with_opencv(){
 }
 
 
-int get_device_name(int gpu, char* deviceName) {
+    LIB_API int get_device_name(int gpu, char* deviceName) {
 #ifdef GPU
-    cudaDeviceProp prop;
-    cudaGetDeviceProperties(&prop, gpu);
-    std::string result = prop.name;
-    std::copy(result.begin(), result.end(), deviceName);
-    return 1;
+        cudaDeviceProp prop;
+        cudaGetDeviceProperties(&prop, gpu);
+        std::string result = prop.name;
+        std::copy(result.begin(), result.end(), deviceName);
+        return 1;
 #else
-    return -1;
+        return -1;
 #endif	// GPU
+    }
+
+    LIB_API int get_net_width(Detector *detector) {
+        return detector->get_net_width();
+    }
+
+    LIB_API int get_net_height(Detector *detector) {
+        return detector->get_net_height();
+    }
+
+    LIB_API int get_net_color_depth(Detector *detector) {
+        return detector->get_net_color_depth();
+    }
 }
 
 #ifdef GPU
