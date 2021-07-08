@@ -305,7 +305,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
         //next_map_calc = fmax(next_map_calc, 400);
         if (calc_map) {
             printf("\n (next mAP calculation at %d iterations) ", next_map_calc);
-            if (mean_average_precision > 0) printf("\n Last accuracy mAP@0.5 = %2.2f %%, best = %2.2f %% ", mean_average_precision * 100, best_map * 100);
+            if (mean_average_precision > 0) printf("\n Last accuracy (avg mAP@0.60|0.85) = %2.2f %%, best = %2.2f %% ", mean_average_precision * 100, best_map * 100);
         }
 
         if (net.cudnn_half) {
@@ -353,8 +353,12 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
             //network net_combined = combine_train_valid_networks(net, net_map);
 
             iter_map = iteration;
-            mean_average_precision = validate_detector_map(datacfg, cfgfile, weightfile, 0.25, 0.5, 0, net.letter_box, &net_map);// &net_combined);
-            printf("\n mean_average_precision (mAP@0.5) = %f \n", mean_average_precision);
+
+            // Validate at IoU thresholds 0.60 and 0.85 to emulate mAP@[.5:.95] without running all 10 thresholds
+            float map60 = validate_detector_map(datacfg, cfgfile, weightfile, 0.25, 0.60, 0, net.letter_box, &net_map);// &net_combined);
+            float map85 = validate_detector_map(datacfg, cfgfile, weightfile, 0.25, 0.85, 0, net.letter_box, &net_map);// &net_combined);
+            mean_average_precision = (map60 + map85) * 0.5;
+            printf("\n mean_average_precision (avg mAP@0.60|0.85) = %f \n", mean_average_precision);
             if (mean_average_precision > best_map) {
                 best_map = mean_average_precision;
                 printf("New best mAP!\n");
