@@ -57,7 +57,6 @@ About Darknet framework: http://pjreddie.com/darknet/
     - [Using also PowerShell](#using-also-powershell)
     - [How to compile on Linux (using `make`)](#how-to-compile-on-linux-using-make)
     - [How to compile on Windows (using `CMake`)](#how-to-compile-on-windows-using-cmake)
-    - [How to compile on Windows (using `vcpkg`)](#how-to-compile-on-windows-using-vcpkg)
   - [How to train with multi-GPU](#how-to-train-with-multi-gpu)
   - [How to train (to detect your custom objects)](#how-to-train-to-detect-your-custom-objects)
     - [How to train tiny-yolo (to detect your custom objects)](#how-to-train-tiny-yolo-to-detect-your-custom-objects)
@@ -65,8 +64,8 @@ About Darknet framework: http://pjreddie.com/darknet/
     - [Custom object detection](#custom-object-detection)
   - [How to improve object detection](#how-to-improve-object-detection)
   - [How to mark bounded boxes of objects and create annotation files](#how-to-mark-bounded-boxes-of-objects-and-create-annotation-files)
-  - [How to use Yolo as DLL and SO libraries](#how-to-use-yolo-as-dll-and-so-libraries)
-- [Citation](#citation)
+  - [How to use Yolo as a library](#how-to-use-yolo-as-a-library)
+  - [Citation](#citation)
 
 ![Darknet Logo](http://pjreddie.com/media/files/darknet-black-small.png)
 
@@ -383,28 +382,12 @@ To run Darknet on Linux use examples from this article, just use `./darknet` ins
 Requires:
 
 - MSVC: https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=Community
-- CMake GUI: `Windows win64-x64 Installer`https://cmake.org/download/
+- CMake: `Windows win64-x64 Installer`https://cmake.org/download/
 - Download Darknet zip-archive with the latest commit and uncompress it: [master.zip](https://github.com/AlexeyAB/darknet/archive/master.zip)
-
-In Windows:
-
-- Start (button) -> All programs -> CMake -> CMake (gui) ->
-
-- [look at image](https://habrastorage.org/webt/pz/s1/uu/pzs1uu4heb7vflfcjqn-lxy-aqu.jpeg) In CMake: Enter input path to the darknet Source, and output path to the Binaries -> Configure (button) -> Optional platform for generator: `x64`  -> Finish -> Generate -> Open Project ->
-
-- in MS Visual Studio: Select: x64 and Release -> Build -> Build solution
-
-- find the executable file `darknet.exe` in the output path to the binaries you specified
-
-![x64 and Release](https://habrastorage.org/webt/ay/ty/f-/aytyf-8bufe7q-16yoecommlwys.jpeg)
-
-### How to compile on Windows (using `vcpkg`)
-
-This is the recommended approach to build Darknet on Windows.
 
 1. Install Visual Studio 2017 or 2019. In case you need to download it, please go here: [Visual Studio Community](http://visualstudio.com). Remember to install English language pack, this is mandatory for vcpkg!
 
-2. Install CUDA enabling VS Integration during installation.
+2. Install CUDA (at least v10.2) enabling VS Integration during installation and cuDNN
 
 3. Open Powershell (Start -> All programs -> Windows Powershell) and type these commands:
 
@@ -705,16 +688,7 @@ Different tools for marking objects in images:
 8. DL-Annotator for Windows ($30): [url](https://www.microsoft.com/en-us/p/dlannotator/9nsx79m7t8fn?activetab=pivot:overviewtab)
 9. v7labs - the greatest cloud labeling tool ($1.5 per hour): https://www.v7labs.com/
 
-## How to use Yolo as DLL and SO libraries
-
-- on Linux
-  - using `build.sh` or
-  - build `darknet` using `cmake` or
-  - set `LIBSO=1` in the `Makefile` and do `make`
-- on Windows
-  - using `build.ps1` or
-  - build `darknet` using `cmake` or
-  - compile `build\darknet\yolo_cpp_dll.sln` solution or `build\darknet\yolo_cpp_dll_no_gpu.sln` solution
+## How to use Yolo as a library
 
 There are 2 APIs:
 
@@ -728,29 +702,13 @@ There are 2 APIs:
 
 ----
 
-1. To compile Yolo as C++ DLL-file `yolo_cpp_dll.dll` - open the solution `build\darknet\yolo_cpp_dll.sln`, set **x64** and **Release**, and do the: Build -> Build yolo_cpp_dll
-    - You should have installed **CUDA 10.2**
-    - To use cuDNN do: (right click on project) -> properties -> C/C++ -> Preprocessor -> Preprocessor Definitions, and add at the beginning of line: `CUDNN;`
-
-2. To use Yolo as DLL-file in your C++ console application - open the solution `build\darknet\yolo_console_dll.sln`, set **x64** and **Release**, and do the: Build -> Build yolo_console_dll
-
-    - you can run your console application from Windows Explorer `build\darknet\x64\yolo_console_dll.exe`
-    **use this command**: `yolo_console_dll.exe data/coco.names yolov4.cfg yolov4.weights test.mp4`
-
-    - after launching your console application and entering the image file name - you will see info for each object:
-    `<obj_id> <left_x> <top_y> <width> <height> <probability>`
-    - to use simple OpenCV-GUI you should uncomment line `//#define OPENCV` in `yolo_console_dll.cpp`-file: [link](https://github.com/AlexeyAB/darknet/blob/a6cbaeecde40f91ddc3ea09aa26a03ab5bbf8ba8/src/yolo_console_dll.cpp#L5)
-    - you can see source code of simple example for detection on the video file: [link](https://github.com/AlexeyAB/darknet/blob/ab1c5f9e57b4175f29a6ef39e7e68987d3e98704/src/yolo_console_dll.cpp#L75)
-
-`yolo_cpp_dll.dll`-API: [link](https://github.com/AlexeyAB/darknet/blob/master/src/yolo_v2_class.hpp#L42)
-
 ```cpp
 struct bbox_t {
-    unsigned int x, y, w, h;    // (x,y) - top-left corner, (w, h) - width & height of bounded box
+    unsigned int x, y, w, h;       // (x,y) - top-left corner, (w, h) - width & height of bounded box
     float prob;                    // confidence - probability that the object was found correctly
-    unsigned int obj_id;        // class of object - from range [0, classes-1]
-    unsigned int track_id;        // tracking id for video (0 - untracked, 1 - inf - tracked object)
-    unsigned int frames_counter;// counter of frames on which the object was detected
+    unsigned int obj_id;           // class of object - from range [0, classes-1]
+    unsigned int track_id;         // tracking id for video (0 - untracked, 1 - inf - tracked object)
+    unsigned int frames_counter;   // counter of frames on which the object was detected
 };
 
 class Detector {
@@ -772,7 +730,7 @@ public:
 
 ## Citation
 
-```
+```bibtex
 @misc{bochkovskiy2020yolov4,
       title={YOLOv4: Optimal Speed and Accuracy of Object Detection}, 
       author={Alexey Bochkovskiy and Chien-Yao Wang and Hong-Yuan Mark Liao},
@@ -783,7 +741,7 @@ public:
 }
 ```
 
-```
+```bibtex
 @InProceedings{Wang_2021_CVPR,
     author    = {Wang, Chien-Yao and Bochkovskiy, Alexey and Liao, Hong-Yuan Mark},
     title     = {{Scaled-YOLOv4}: Scaling Cross Stage Partial Network},
