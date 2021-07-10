@@ -846,6 +846,12 @@ float rand_scale(float s)
     return 1./scale;
 }
 
+float rand_scale_only_downsample(float s)
+{
+    float scale = rand_uniform_strong(1,s);
+    return 1./scale;
+}
+
 float **one_hot_encode(float *a, int n, int k)
 {
     int i;
