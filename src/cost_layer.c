@@ -132,7 +132,6 @@ void forward_cost_layer_gpu(cost_layer l, network_state state)
         qsort(l.delta, l.batch*l.inputs, sizeof(float), float_abs_compare);
         int n = (1-l.ratio) * l.batch*l.inputs;
         float thresh = l.delta[n];
-        thresh = 0;
         printf("%f\n", thresh);
         supp_ongpu(l.batch*l.inputs, thresh, l.delta_gpu, 1);
     }
