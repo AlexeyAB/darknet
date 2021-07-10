@@ -991,10 +991,10 @@ layer parse_shortcut(list *options, size_params params, network net)
 
     for (i = 0; i < n; ++i) {
         int index = layers[i];
-        assert(params.w == net.layers[index].out_w && params.h == net.layers[index].out_h);
+        // assert(params.w == net.layers[index].out_w && params.h == net.layers[index].out_h);
 
         if (params.w != net.layers[index].out_w || params.h != net.layers[index].out_h || params.c != net.layers[index].out_c)
-            fprintf(stderr, " (%4d x%4d x%4d) + (%4d x%4d x%4d) \n",
+            fprintf(stderr, "Downsample here: (%d x %d x %d) + (%d x %d x %d) \n",
                 params.w, params.h, params.c, net.layers[index].out_w, net.layers[index].out_h, params.net.layers[index].out_c);
     }
 
