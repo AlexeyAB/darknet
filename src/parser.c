@@ -159,7 +159,7 @@ local_layer parse_local(list *options, size_params params)
     w = params.w;
     c = params.c;
     batch=params.batch;
-    if(!(h && w && c)) error("Layer before local layer must output image.");
+    if(!(h && w && c)) error("Layer before local layer must output image.", __FILE__, __LINE__);
 
     local_layer layer = make_local_layer(batch,h,w,c,n,size,stride,pad,activation);
 
@@ -205,7 +205,7 @@ convolutional_layer parse_convolutional(list *options, size_params params)
     w = params.w;
     c = params.c;
     batch=params.batch;
-    if(!(h && w && c)) error("Layer before convolutional layer must output image.");
+    if(!(h && w && c)) error("Layer before convolutional layer must output image.", __FILE__, __LINE__);
     int batch_normalize = option_find_int_quiet(options, "batch_normalize", 0);
     int cbn = option_find_int_quiet(options, "cbn", 0);
     if (cbn) batch_normalize = 2;
@@ -408,7 +408,7 @@ int *parse_yolo_mask(char *a, int *num)
             if (a[i] == '#') break;
             if (a[i] == ',') ++n;
         }
-        mask = (int*)xcalloc(n, sizeof(int));
+        mask = (int*)xcalloc(n, sizeof(int), __FILE__, __LINE__);
         for (i = 0; i < n; ++i) {
             int val = atoi(a);
             mask[i] = val;
@@ -435,7 +435,7 @@ float *get_classes_multipliers(char *cpc, const int classes, const float max_del
             if (counters_per_class[i] < 1) counters_per_class[i] = 1;
             if (max_counter < counters_per_class[i]) max_counter = counters_per_class[i];
         }
-        classes_multipliers = (float *)calloc(classes_counters, sizeof(float));
+        classes_multipliers = (float *)xcalloc(classes_counters, sizeof(float), __FILE__, __LINE__);
         for (i = 0; i < classes_counters; ++i) {
             classes_multipliers[i] = max_counter / counters_per_class[i];
             if(classes_multipliers[i] > max_delta) classes_multipliers[i] = max_delta;
@@ -527,7 +527,7 @@ layer parse_yolo(list *options, size_params params)
         printf(" embedding_layer_id = %d, ", embedding_layer_id);
         layer le = params.net.layers[embedding_layer_id];
         l.embedding_layer_id = embedding_layer_id;
-        l.embedding_output = (float*)xcalloc(le.batch * le.outputs, sizeof(float));
+        l.embedding_output = (float*)xcalloc(le.batch * le.outputs, sizeof(float), __FILE__, __LINE__);
         l.embedding_size = le.n / l.n;
         printf(" embedding_size = %d \n", l.embedding_size);
         if (le.n % l.n != 0) {
@@ -569,7 +569,7 @@ int *parse_gaussian_yolo_mask(char *a, int *num) // Gaussian_YOLOv3
             if (a[i] == '#') break;
             if (a[i] == ',') ++n;
         }
-        mask = (int *)calloc(n, sizeof(int));
+        mask = (int *)xcalloc(n, sizeof(int), __FILE__, __LINE__);
         for (i = 0; i < n; ++i) {
             int val = atoi(a);
             mask[i] = val;
@@ -781,7 +781,7 @@ crop_layer parse_crop(list *options, size_params params)
     w = params.w;
     c = params.c;
     batch=params.batch;
-    if(!(h && w && c)) error("Layer before crop layer must output image.");
+    if(!(h && w && c)) error("Layer before crop layer must output image.", __FILE__, __LINE__);
 
     int noadjust = option_find_int_quiet(options, "noadjust",0);
 
@@ -801,7 +801,7 @@ layer parse_reorg(list *options, size_params params)
     w = params.w;
     c = params.c;
     batch=params.batch;
-    if(!(h && w && c)) error("Layer before reorg layer must output image.");
+    if(!(h && w && c)) error("Layer before reorg layer must output image.", __FILE__, __LINE__);
 
     layer layer = make_reorg_layer(batch,w,h,c,stride,reverse);
     return layer;
@@ -818,7 +818,7 @@ layer parse_reorg_old(list *options, size_params params)
     w = params.w;
     c = params.c;
     batch = params.batch;
-    if (!(h && w && c)) error("Layer before reorg layer must output image.");
+    if (!(h && w && c)) error("Layer before reorg layer must output image.", __FILE__, __LINE__);
 
     layer layer = make_reorg_old_layer(batch, w, h, c, stride, reverse);
     return layer;
@@ -841,7 +841,7 @@ maxpool_layer parse_local_avgpool(list *options, size_params params)
     w = params.w;
     c = params.c;
     batch = params.batch;
-    if (!(h && w && c)) error("Layer before [local_avgpool] layer must output image.");
+    if (!(h && w && c)) error("Layer before [local_avgpool] layer must output image.", __FILE__, __LINE__);
 
     maxpool_layer layer = make_maxpool_layer(batch, h, w, c, size, stride_x, stride_y, padding, maxpool_depth, out_channels, antialiasing, avgpool, params.train);
     return layer;
@@ -864,7 +864,7 @@ maxpool_layer parse_maxpool(list *options, size_params params)
     w = params.w;
     c = params.c;
     batch=params.batch;
-    if(!(h && w && c)) error("Layer before [maxpool] layer must output image.");
+    if(!(h && w && c)) error("Layer before [maxpool] layer must output image.", __FILE__, __LINE__);
 
     maxpool_layer layer = make_maxpool_layer(batch, h, w, c, size, stride_x, stride_y, padding, maxpool_depth, out_channels, antialiasing, avgpool, params.train);
     layer.maxpool_zero_nonmax = option_find_int_quiet(options, "maxpool_zero_nonmax", 0);
@@ -878,7 +878,7 @@ avgpool_layer parse_avgpool(list *options, size_params params)
     h = params.h;
     c = params.c;
     batch=params.batch;
-    if(!(h && w && c)) error("Layer before avgpool layer must output image.");
+    if(!(h && w && c)) error("Layer before avgpool layer must output image.", __FILE__, __LINE__);
 
     avgpool_layer layer = make_avgpool_layer(batch,w,h,c);
     return layer;
@@ -952,19 +952,19 @@ layer parse_shortcut(list *options, size_params params, network net)
 
     char *l = option_find(options, "from");
     int len = strlen(l);
-    if (!l) error("Route Layer must specify input layers: from = ...");
+    if (!l) error("Route Layer must specify input layers: from = ...", __FILE__, __LINE__);
     int n = 1;
     int i;
     for (i = 0; i < len; ++i) {
         if (l[i] == ',') ++n;
     }
 
-    int* layers = (int*)calloc(n, sizeof(int));
-    int* sizes = (int*)calloc(n, sizeof(int));
-    float **layers_output = (float **)calloc(n, sizeof(float *));
-    float **layers_delta = (float **)calloc(n, sizeof(float *));
-    float **layers_output_gpu = (float **)calloc(n, sizeof(float *));
-    float **layers_delta_gpu = (float **)calloc(n, sizeof(float *));
+    int* layers = (int*)xcalloc(n, sizeof(int), __FILE__, __LINE__);
+    int* sizes = (int*)xcalloc(n, sizeof(int), __FILE__, __LINE__);
+    float **layers_output = (float **)xcalloc(n, sizeof(float *), __FILE__, __LINE__);
+    float **layers_delta = (float **)xcalloc(n, sizeof(float *), __FILE__, __LINE__);
+    float **layers_output_gpu = (float **)xcalloc(n, sizeof(float *), __FILE__, __LINE__);
+    float **layers_delta_gpu = (float **)xcalloc(n, sizeof(float *), __FILE__, __LINE__);
 
     for (i = 0; i < n; ++i) {
         int index = atoi(l);
@@ -1084,7 +1084,7 @@ layer parse_upsample(list *options, size_params params, network net)
 route_layer parse_route(list *options, size_params params)
 {
     char *l = option_find(options, "layers");
-    if(!l) error("Route Layer must specify input layers");
+    if(!l) error("Route Layer must specify input layers", __FILE__, __LINE__);
     int len = strlen(l);
     int n = 1;
     int i;
@@ -1092,8 +1092,8 @@ route_layer parse_route(list *options, size_params params)
         if (l[i] == ',') ++n;
     }
 
-    int* layers = (int*)xcalloc(n, sizeof(int));
-    int* sizes = (int*)xcalloc(n, sizeof(int));
+    int* layers = (int*)xcalloc(n, sizeof(int), __FILE__, __LINE__);
+    int* sizes = (int*)xcalloc(n, sizeof(int), __FILE__, __LINE__);
     for(i = 0; i < n; ++i){
         int index = atoi(l);
         l = strchr(l, ',')+1;
@@ -1243,7 +1243,7 @@ void parse_net_options(list *options, network *net)
     net->hue = option_find_float_quiet(options, "hue", 0);
     net->power = option_find_float_quiet(options, "power", 4);
 
-    if(!net->inputs && !(net->h && net->w && net->c)) error("No input parameters supplied");
+    if(!net->inputs && !(net->h && net->w && net->c)) error("No input parameters supplied", __FILE__, __LINE__);
 
     char *policy_s = option_find_str(options, "policy", "constant");
     net->policy = get_policy(policy_s);
@@ -1267,7 +1267,7 @@ void parse_net_options(list *options, network *net)
         char *l = option_find(options, "steps");
         char *p = option_find(options, "scales");
         char *s = option_find(options, "seq_scales");
-        if(net->policy == STEPS && (!l || !p)) error("STEPS policy must have steps and scales in cfg file");
+        if(net->policy == STEPS && (!l || !p)) error("STEPS policy must have steps and scales in cfg file", __FILE__, __LINE__);
 
         if (l) {
             int len = strlen(l);
@@ -1277,9 +1277,9 @@ void parse_net_options(list *options, network *net)
                 if (l[i] == '#') break;
                 if (l[i] == ',') ++n;
             }
-            int* steps = (int*)xcalloc(n, sizeof(int));
-            float* scales = (float*)xcalloc(n, sizeof(float));
-            float* seq_scales = (float*)xcalloc(n, sizeof(float));
+            int* steps = (int*)xcalloc(n, sizeof(int), __FILE__, __LINE__);
+            float* scales = (float*)xcalloc(n, sizeof(float), __FILE__, __LINE__);
+            float* seq_scales = (float*)xcalloc(n, sizeof(float), __FILE__, __LINE__);
             for (i = 0; i < n; ++i) {
                 float scale = 1.0;
                 if (p) {
@@ -1361,7 +1361,7 @@ network parse_network_cfg_custom(char *filename, int batch, int time_steps)
 {
     list *sections = read_cfg(filename);
     node *n = sections->front;
-    if(!n) error("Config file has no sections");
+    if(!n) error("Config file has no sections", __FILE__, __LINE__);
     network net = make_network(sections->size - 1);
     net.gpu_index = gpu_index;
     size_params params;
@@ -1371,7 +1371,7 @@ network parse_network_cfg_custom(char *filename, int batch, int time_steps)
 
     section *s = (section *)n->val;
     list *options = s->options;
-    if(!is_network(s)) error("First section must be [net] or [network]");
+    if(!is_network(s)) error("First section must be [net] or [network]", __FILE__, __LINE__);
     parse_net_options(options, &net);
 
 #ifdef GPU
@@ -1703,7 +1703,7 @@ network parse_network_cfg_custom(char *filename, int batch, int time_steps)
             layer l = net.layers[k];
             if (l.keep_delta_gpu) {
                 if (!l.delta) {
-                    net.layers[k].delta = (float*)xcalloc(l.outputs*l.batch, sizeof(float));
+                    net.layers[k].delta = (float*)xcalloc(l.outputs*l.batch, sizeof(float), __FILE__, __LINE__);
                 }
 #ifdef GPU
                 if (!l.delta_gpu) {
@@ -1777,7 +1777,7 @@ network parse_network_cfg_custom(char *filename, int batch, int time_steps)
         if (cudaSuccess == cudaHostAlloc(&net.input_pinned_cpu, size * sizeof(float), cudaHostRegisterMapped)) net.input_pinned_cpu_flag = 1;
         else {
             cudaGetLastError(); // reset CUDA-error
-            net.input_pinned_cpu = (float*)xcalloc(size, sizeof(float));
+            net.input_pinned_cpu = (float*)xcalloc(size, sizeof(float), __FILE__, __LINE__);
         }
 
         // pre-allocate memory for inference on Tensor Cores (fp16)
@@ -1794,12 +1794,12 @@ network parse_network_cfg_custom(char *filename, int batch, int time_steps)
             net.workspace = cuda_make_array(0, workspace_size / sizeof(float) + 1);
         }
         else {
-            net.workspace = (float*)xcalloc(1, workspace_size);
+            net.workspace = (float*)xcalloc(1, workspace_size, __FILE__, __LINE__);
         }
     }
 #else
         if (workspace_size) {
-            net.workspace = (float*)xcalloc(1, workspace_size);
+            net.workspace = (float*)xcalloc(1, workspace_size, __FILE__, __LINE__);
         }
 #endif
 
@@ -1826,7 +1826,7 @@ list *read_cfg(char *filename)
         strip(line);
         switch(line[0]){
             case '[':
-                current = (section*)xmalloc(sizeof(section));
+                current = (section*)xmalloc(sizeof(section), __FILE__, __LINE__);
                 list_insert(sections, current);
                 current->options = make_list();
                 current->type = line;
@@ -1906,7 +1906,7 @@ void save_implicit_weights(layer l, FILE *fp)
         //printf("\n pull_implicit_layer \n");
     }
 #endif
-    int i;
+    //int i;
     //if(l.weight_updates) for (i = 0; i < l.nweights; ++i) printf(" %f, ", l.weight_updates[i]);
     //printf(" l.nweights = %d - update \n", l.nweights);
     //for (i = 0; i < l.nweights; ++i) printf(" %f, ", l.weights[i]);
@@ -2095,7 +2095,7 @@ void save_weights(network net, char *filename)
 
 void transpose_matrix(float *a, int rows, int cols)
 {
-    float* transpose = (float*)xcalloc(rows * cols, sizeof(float));
+    float* transpose = (float*)xcalloc(rows * cols, sizeof(float), __FILE__, __LINE__);
     int x, y;
     for(x = 0; x < rows; ++x){
         for(y = 0; y < cols; ++y){
@@ -2379,7 +2379,7 @@ void load_weights(network *net, char *filename)
 network *load_network_custom(char *cfg, char *weights, int clear, int batch)
 {
     printf(" Try to load cfg: %s, weights: %s, clear = %d \n", cfg, weights, clear);
-    network* net = (network*)xcalloc(1, sizeof(network));
+    network* net = (network*)xcalloc(1, sizeof(network), __FILE__, __LINE__);
     *net = parse_network_cfg_custom(cfg, batch, 1);
     if (weights && weights[0] != 0) {
         printf(" Try to load weights: %s \n", weights);
@@ -2397,7 +2397,7 @@ network *load_network_custom(char *cfg, char *weights, int clear, int batch)
 network *load_network(char *cfg, char *weights, int clear)
 {
     printf(" Try to load cfg: %s, clear = %d \n", cfg, clear);
-    network* net = (network*)xcalloc(1, sizeof(network));
+    network* net = (network*)xcalloc(1, sizeof(network), __FILE__, __LINE__);
     *net = parse_network_cfg(cfg);
     if (weights && weights[0] != 0) {
         printf(" Try to load weights: %s \n", weights);

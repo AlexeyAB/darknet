@@ -18,8 +18,8 @@ layer make_activation_layer(int batch, int inputs, ACTIVATION activation)
     l.outputs = inputs;
     l.batch=batch;
 
-    l.output = (float*)xcalloc(batch * inputs, sizeof(float));
-    l.delta = (float*)xcalloc(batch * inputs, sizeof(float));
+    l.output = (float*)xcalloc(batch * inputs, sizeof(float), __FILE__, __LINE__);
+    l.delta = (float*)xcalloc(batch * inputs, sizeof(float), __FILE__, __LINE__);
 
     l.forward = forward_activation_layer;
     l.backward = backward_activation_layer;

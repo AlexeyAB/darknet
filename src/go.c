@@ -19,7 +19,7 @@ char *fgetgo(FILE *fp)
 {
     if(feof(fp)) return 0;
     size_t size = 94;
-    char* line = (char*)xmalloc(size * sizeof(char));
+    char* line = (char*)xmalloc(size * sizeof(char), __FILE__, __LINE__);
     if(size != fread(line, sizeof(char), size, fp)){
         free(line);
         return 0;
@@ -32,21 +32,21 @@ moves load_go_moves(char *filename)
 {
     moves m;
     m.n = 128;
-    m.data = (char**)xcalloc(128, sizeof(char*));
+    m.data = (char**)xcalloc(128, sizeof(char*), __FILE__, __LINE__);
     FILE *fp = fopen(filename, "rb");
     int count = 0;
     char *line = 0;
     while((line = fgetgo(fp))){
         if(count >= m.n){
             m.n *= 2;
-            m.data = (char**)xrealloc(m.data, m.n * sizeof(char*));
+            m.data = (char**)xrealloc(m.data, m.n * sizeof(char*), __FILE__, __LINE__);
         }
         m.data[count] = line;
         ++count;
     }
     printf("%d\n", count);
     m.n = count;
-    m.data = (char**)xrealloc(m.data, count * sizeof(char*));
+    m.data = (char**)xrealloc(m.data, count * sizeof(char*), __FILE__, __LINE__);
     fclose(fp);
     return m;
 }
@@ -128,8 +128,8 @@ void train_go(char *cfgfile, char *weightfile)
     char* backup_directory = "backup/";
 
     char buff[256];
-    float* board = (float*)xcalloc(19 * 19 * net.batch, sizeof(float));
-    float* move = (float*)xcalloc(19 * 19 * net.batch, sizeof(float));
+    float* board = (float*)xcalloc(19 * 19 * net.batch, sizeof(float), __FILE__, __LINE__);
+    float* move = (float*)xcalloc(19 * 19 * net.batch, sizeof(float), __FILE__, __LINE__);
     moves m = load_go_moves("backup/go.train");
     //moves m = load_go_moves("games.txt");
 
@@ -187,7 +187,7 @@ void propagate_liberty(float *board, int *lib, int *visited, int row, int col, i
 
 int *calculate_liberties(float *board)
 {
-    int* lib = (int*)xcalloc(19 * 19, sizeof(int));
+    int* lib = (int*)xcalloc(19 * 19, sizeof(int), __FILE__, __LINE__);
     int visited[361];
     int i, j;
     for(j = 0; j < 19; ++j){
@@ -411,8 +411,8 @@ void valid_go(char *cfgfile, char *weightfile, int multi)
     set_batch_network(&net, 1);
     printf("Learning Rate: %g, Momentum: %g, Decay: %g\n", net.learning_rate, net.momentum, net.decay);
 
-    float* board = (float*)xcalloc(19 * 19, sizeof(float));
-    float* move = (float*)xcalloc(19 * 19, sizeof(float));
+    float* board = (float*)xcalloc(19 * 19, sizeof(float), __FILE__, __LINE__);
+    float* move = (float*)xcalloc(19 * 19, sizeof(float), __FILE__, __LINE__);
     moves m = load_go_moves("backup/go.test");
 
     int N = m.n;
@@ -441,9 +441,9 @@ void engine_go(char *filename, char *weightfile, int multi)
     }
     srand(time(0));
     set_batch_network(&net, 1);
-    float* board = (float*)xcalloc(19 * 19, sizeof(float));
-    char* one = (char*)xcalloc(91, sizeof(char));
-    char* two = (char*)xcalloc(91, sizeof(char));
+    float* board = (float*)xcalloc(19 * 19, sizeof(float), __FILE__, __LINE__);
+    char* one = (char*)xcalloc(91, sizeof(char), __FILE__, __LINE__);
+    char* two = (char*)xcalloc(91, sizeof(char), __FILE__, __LINE__);
     int passed = 0;
     while(1){
         char buff[256];
@@ -614,8 +614,8 @@ void test_go(char *cfg, char *weights, int multi)
     }
     srand(time(0));
     set_batch_network(&net, 1);
-    float* board = (float*)xcalloc(19 * 19, sizeof(float));
-    float* move = (float*)xcalloc(19 * 19, sizeof(float));
+    float* board = (float*)xcalloc(19 * 19, sizeof(float), __FILE__, __LINE__);
+    float* move = (float*)xcalloc(19 * 19, sizeof(float), __FILE__, __LINE__);
     int color = 1;
     while(1){
         float *output = network_predict(net, board);
@@ -766,9 +766,9 @@ void self_go(char *filename, char *weightfile, char *f2, char *w2, int multi)
     int count = 0;
     set_batch_network(&net, 1);
     set_batch_network(&net2, 1);
-    float* board = (float*)xcalloc(19 * 19, sizeof(float));
-    char* one = (char*)xcalloc(91, sizeof(char));
-    char* two = (char*)xcalloc(91, sizeof(char));
+    float* board = (float*)xcalloc(19 * 19, sizeof(float), __FILE__, __LINE__);
+    char* one = (char*)xcalloc(91, sizeof(char), __FILE__, __LINE__);
+    char* two = (char*)xcalloc(91, sizeof(char), __FILE__, __LINE__);
     int done = 0;
     int player = 1;
     int p1 = 0;

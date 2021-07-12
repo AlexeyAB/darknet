@@ -36,10 +36,10 @@ softmax_layer make_softmax_layer(int batch, int inputs, int groups)
     l.groups = groups;
     l.inputs = inputs;
     l.outputs = inputs;
-    l.loss = (float*)xcalloc(inputs * batch, sizeof(float));
-    l.output = (float*)xcalloc(inputs * batch, sizeof(float));
-    l.delta = (float*)xcalloc(inputs * batch, sizeof(float));
-    l.cost = (float*)xcalloc(1, sizeof(float));
+    l.loss = (float*)xcalloc(inputs * batch, sizeof(float), __FILE__, __LINE__);
+    l.output = (float*)xcalloc(inputs * batch, sizeof(float), __FILE__, __LINE__);
+    l.delta = (float*)xcalloc(inputs * batch, sizeof(float), __FILE__, __LINE__);
+    l.cost = (float*)xcalloc(1, sizeof(float), __FILE__, __LINE__);
 
     l.forward = forward_softmax_layer;
     l.backward = backward_softmax_layer;
@@ -161,26 +161,26 @@ contrastive_layer make_contrastive_layer(int batch, int w, int h, int c, int cla
     }
     else {
         l.detection = 0;
-        l.labels = (int*)xcalloc(l.batch, sizeof(int)); // labels
+        l.labels = (int*)xcalloc(l.batch, sizeof(int), __FILE__, __LINE__); // labels
         l.n = 1;                                        // num of embeddings per cell
         l.classes = classes;                            // num of classes
         l.embedding_size = l.c;
     }
     l.outputs = inputs;
 
-    l.loss = (float*)xcalloc(1, sizeof(float));
-    l.output = (float*)xcalloc(inputs * batch, sizeof(float));
-    l.delta = (float*)xcalloc(inputs * batch, sizeof(float));
-    l.cost = (float*)xcalloc(1, sizeof(float));
+    l.loss = (float*)xcalloc(1, sizeof(float), __FILE__, __LINE__);
+    l.output = (float*)xcalloc(inputs * batch, sizeof(float), __FILE__, __LINE__);
+    l.delta = (float*)xcalloc(inputs * batch, sizeof(float), __FILE__, __LINE__);
+    l.cost = (float*)xcalloc(1, sizeof(float), __FILE__, __LINE__);
 
     const size_t step = l.batch*l.n*l.h*l.w;
     l.cos_sim = NULL;
     l.exp_cos_sim = NULL;
     l.p_constrastive = NULL;
     if (!l.detection) {
-        l.cos_sim = (float*)xcalloc(step*step, sizeof(float));
-        l.exp_cos_sim = (float*)xcalloc(step*step, sizeof(float));
-        l.p_constrastive = (float*)xcalloc(step*step, sizeof(float));
+        l.cos_sim = (float*)xcalloc(step*step, sizeof(float), __FILE__, __LINE__);
+        l.exp_cos_sim = (float*)xcalloc(step*step, sizeof(float), __FILE__, __LINE__);
+        l.p_constrastive = (float*)xcalloc(step*step, sizeof(float), __FILE__, __LINE__);
     }
     //l.p_constrastive = (float*)xcalloc(step*step, sizeof(float));
     //l.contrast_p_size = (int*)xcalloc(1, sizeof(int));
@@ -263,7 +263,7 @@ void forward_contrastive_layer(contrastive_layer l, network_state state)
     //printf("\n\n");
 
     // set pointers to features
-    float **z = (float**)xcalloc(l.batch*l.n*l.h*l.w, sizeof(float*));
+    float **z = (float**)xcalloc(l.batch*l.n*l.h*l.w, sizeof(float*), __FILE__, __LINE__);
 
     for (b = 0; b < l.batch; ++b) {
         for (n = 0; n < l.n; ++n) {
@@ -277,7 +277,7 @@ void forward_contrastive_layer(contrastive_layer l, network_state state)
                     //float *ptr = state.input + input_index;
                     //z[z_index] = ptr;
 
-                    z[z_index] = (float*)xcalloc(l.embedding_size, sizeof(float));
+                    z[z_index] = (float*)xcalloc(l.embedding_size, sizeof(float), __FILE__, __LINE__);
                     get_embedding(state.input, l.w, l.h, l.c, l.embedding_size, w, h, n, b, z[z_index]);
                 }
             }
@@ -290,10 +290,10 @@ void forward_contrastive_layer(contrastive_layer l, network_state state)
     const size_t step = l.batch*l.n*l.h*l.w;
     size_t contrast_p_size = step;
     if (!l.detection) contrast_p_size = l.batch*l.batch;
-    contrastive_params *contrast_p = (contrastive_params*)xcalloc(contrast_p_size, sizeof(contrastive_params));
+    contrastive_params *contrast_p = (contrastive_params*)xcalloc(contrast_p_size, sizeof(contrastive_params), __FILE__, __LINE__);
 
-    float *max_sim_same = (float *)xcalloc(l.batch*l.inputs, sizeof(float));
-    float *max_sim_diff = (float *)xcalloc(l.batch*l.inputs, sizeof(float));
+    float *max_sim_same = (float *)xcalloc(l.batch*l.inputs, sizeof(float), __FILE__, __LINE__);
+    float *max_sim_diff = (float *)xcalloc(l.batch*l.inputs, sizeof(float), __FILE__, __LINE__);
     fill_cpu(l.batch*l.inputs, -10, max_sim_same, 1);
     fill_cpu(l.batch*l.inputs, -10, max_sim_diff, 1);
 
@@ -346,7 +346,7 @@ void forward_contrastive_layer(contrastive_layer l, network_state state)
                                     if ((contrast_p_index+1) >= contrast_p_size) {
                                         contrast_p_size = contrast_p_index + 1;
                                         //printf(" contrast_p_size = %d, z_index = %d, z_index2 = %d \n", contrast_p_size, z_index, z_index2);
-                                        contrast_p = (contrastive_params*)xrealloc(contrast_p, contrast_p_size * sizeof(contrastive_params));
+                                        contrast_p = (contrastive_params*)xrealloc(contrast_p, contrast_p_size * sizeof(contrastive_params), __FILE__, __LINE__);
                                     }
 
                                     if (sim > 1.001 || sim < -1.001) {
@@ -590,14 +590,14 @@ void forward_contrastive_layer_gpu(contrastive_layer l, network_state state)
     simple_copy_ongpu(l.batch*l.inputs, state.input, l.output_gpu);
     if (!state.train) return;
 
-    float *in_cpu = (float *)xcalloc(l.batch*l.inputs, sizeof(float));
+    float *in_cpu = (float *)xcalloc(l.batch*l.inputs, sizeof(float), __FILE__, __LINE__);
     cuda_pull_array(l.output_gpu, l.output, l.batch*l.outputs);
     memcpy(in_cpu, l.output, l.batch*l.outputs * sizeof(float));
     float *truth_cpu = 0;
     if (state.truth) {
         int num_truth = l.batch*l.classes;
         if (l.detection) num_truth = l.batch*l.truths;
-        truth_cpu = (float *)xcalloc(num_truth, sizeof(float));
+        truth_cpu = (float *)xcalloc(num_truth, sizeof(float), __FILE__, __LINE__);
         cuda_pull_array(state.truth, truth_cpu, num_truth);
     }
     network_state cpu_state = state;

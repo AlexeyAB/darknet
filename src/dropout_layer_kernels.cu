@@ -188,7 +188,7 @@ void forward_dropout_layer_gpu(dropout_layer l, network_state state)
             avg_scale = avg_scale / l.batch;
             printf(" avg_scale = %f \n", avg_scale);
 
-            float *output = (float *)calloc(l.outputs * l.batch, sizeof(float));
+            float *output = (float *)xcalloc(l.outputs * l.batch, sizeof(float), __FILE__, __LINE__);
             cuda_pull_array(state.input, output, l.outputs * l.batch);
 
             printf(" l.w = %d, l.h = %d, l.c = %d \n", l.w, l.h, l.c);
@@ -286,7 +286,7 @@ void backward_dropout_layer_gpu(dropout_layer l, network_state state)
             avg_scale = avg_scale / l.batch;
             printf(" avg_scale = %f \n", avg_scale);
 
-            float *output = (float *)calloc(l.outputs * l.batch, sizeof(float));
+            float *output = (float *)xcalloc(l.outputs * l.batch, sizeof(float), __FILE__, __LINE__);
             cuda_pull_array(state.delta, output, l.outputs * l.batch);
 
             printf(" l.w = %d, l.h = %d, l.c = %d \n", l.w, l.h, l.c);

@@ -16,10 +16,10 @@ layer make_normalization_layer(int batch, int w, int h, int c, int size, float a
     layer.size = size;
     layer.alpha = alpha;
     layer.beta = beta;
-    layer.output = (float*)xcalloc(h * w * c * batch, sizeof(float));
-    layer.delta = (float*)xcalloc(h * w * c * batch, sizeof(float));
-    layer.squared = (float*)xcalloc(h * w * c * batch, sizeof(float));
-    layer.norms = (float*)xcalloc(h * w * c * batch, sizeof(float));
+    layer.output = (float*)xcalloc(h * w * c * batch, sizeof(float), __FILE__, __LINE__);
+    layer.delta = (float*)xcalloc(h * w * c * batch, sizeof(float), __FILE__, __LINE__);
+    layer.squared = (float*)xcalloc(h * w * c * batch, sizeof(float), __FILE__, __LINE__);
+    layer.norms = (float*)xcalloc(h * w * c * batch, sizeof(float), __FILE__, __LINE__);
     layer.inputs = w*h*c;
     layer.outputs = layer.inputs;
 
@@ -47,10 +47,10 @@ void resize_normalization_layer(layer *layer, int w, int h)
     layer->out_w = w;
     layer->inputs = w*h*c;
     layer->outputs = layer->inputs;
-    layer->output = (float*)xrealloc(layer->output, h * w * c * batch * sizeof(float));
-    layer->delta = (float*)xrealloc(layer->delta, h * w * c * batch * sizeof(float));
-    layer->squared = (float*)xrealloc(layer->squared, h * w * c * batch * sizeof(float));
-    layer->norms = (float*)xrealloc(layer->norms, h * w * c * batch * sizeof(float));
+    layer->output = (float*)xrealloc(layer->output, h * w * c * batch * sizeof(float), __FILE__, __LINE__);
+    layer->delta = (float*)xrealloc(layer->delta, h * w * c * batch * sizeof(float), __FILE__, __LINE__);
+    layer->squared = (float*)xrealloc(layer->squared, h * w * c * batch * sizeof(float), __FILE__, __LINE__);
+    layer->norms = (float*)xrealloc(layer->norms, h * w * c * batch * sizeof(float), __FILE__, __LINE__);
 #ifdef GPU
     cuda_free(layer->output_gpu);
     cuda_free(layer->delta_gpu);

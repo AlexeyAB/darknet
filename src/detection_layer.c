@@ -25,11 +25,11 @@ detection_layer make_detection_layer(int batch, int inputs, int n, int side, int
     l.w = side;
     l.h = side;
     assert(side*side*((1 + l.coords)*l.n + l.classes) == inputs);
-    l.cost = (float*)xcalloc(1, sizeof(float));
+    l.cost = (float*)xcalloc(1, sizeof(float), __FILE__, __LINE__);
     l.outputs = l.inputs;
     l.truths = l.side*l.side*(1+l.coords+l.classes);
-    l.output = (float*)xcalloc(batch * l.outputs, sizeof(float));
-    l.delta = (float*)xcalloc(batch * l.outputs, sizeof(float));
+    l.output = (float*)xcalloc(batch * l.outputs, sizeof(float), __FILE__, __LINE__);
+    l.delta = (float*)xcalloc(batch * l.outputs, sizeof(float), __FILE__, __LINE__);
 
     l.forward = forward_detection_layer;
     l.backward = backward_detection_layer;
@@ -182,7 +182,7 @@ void forward_detection_layer(const detection_layer l, network_state state)
         }
 
         if(0){
-            float* costs = (float*)xcalloc(l.batch * locations * l.n, sizeof(float));
+            float* costs = (float*)xcalloc(l.batch * locations * l.n, sizeof(float), __FILE__, __LINE__);
             for (b = 0; b < l.batch; ++b) {
                 int index = b*l.inputs;
                 for (i = 0; i < locations; ++i) {
@@ -259,11 +259,11 @@ void forward_detection_layer_gpu(const detection_layer l, network_state state)
         return;
     }
 
-    float* in_cpu = (float*)xcalloc(l.batch * l.inputs, sizeof(float));
+    float* in_cpu = (float*)xcalloc(l.batch * l.inputs, sizeof(float), __FILE__, __LINE__);
     float *truth_cpu = 0;
     if(state.truth){
         int num_truth = l.batch*l.side*l.side*(1+l.coords+l.classes);
-        truth_cpu = (float*)xcalloc(num_truth, sizeof(float));
+        truth_cpu = (float*)xcalloc(num_truth, sizeof(float), __FILE__, __LINE__);
         cuda_pull_array(state.truth, truth_cpu, num_truth);
     }
     cuda_pull_array(state.input, in_cpu, l.batch*l.inputs);

@@ -43,26 +43,26 @@ layer make_shortcut_layer(int batch, int n, int *input_layers, int* input_sizes,
     l.index = l.input_layers[0];
 
 
-    if (train) l.delta = (float*)xcalloc(l.outputs * batch, sizeof(float));
-    l.output = (float*)xcalloc(l.outputs * batch, sizeof(float));
+    if (train) l.delta = (float*)xcalloc(l.outputs * batch, sizeof(float), __FILE__, __LINE__);
+    l.output = (float*)xcalloc(l.outputs * batch, sizeof(float), __FILE__, __LINE__);
 
     l.nweights = 0;
     if (l.weights_type == PER_FEATURE) l.nweights = (l.n + 1);
     else if (l.weights_type == PER_CHANNEL) l.nweights = (l.n + 1) * l.c;
 
     if (l.nweights > 0) {
-        l.weights = (float*)calloc(l.nweights, sizeof(float));
+        l.weights = (float*)xcalloc(l.nweights, sizeof(float), __FILE__, __LINE__);
         float scale = sqrt(2. / l.nweights);
         for (i = 0; i < l.nweights; ++i) l.weights[i] = 1;// +0.01*rand_uniform(-1, 1);// scale*rand_uniform(-1, 1);   // rand_normal();
 
-        if (train) l.weight_updates = (float*)calloc(l.nweights, sizeof(float));
+        if (train) l.weight_updates = (float*)xcalloc(l.nweights, sizeof(float), __FILE__, __LINE__);
         l.update = update_shortcut_layer;
     }
 
     l.forward = forward_shortcut_layer;
     l.backward = backward_shortcut_layer;
 #ifndef GPU
-    if (l.activation == SWISH || l.activation == MISH) l.activation_input = (float*)calloc(l.batch*l.outputs, sizeof(float));
+    if (l.activation == SWISH || l.activation == MISH) l.activation_input = (float*)xcalloc(l.batch*l.outputs, sizeof(float), __FILE__, __LINE__);
 #endif // GPU
 
 #ifdef GPU
@@ -99,8 +99,8 @@ void resize_shortcut_layer(layer *l, int w, int h, network *net)
     l->h = l->out_h = h;
     l->outputs = w*h*l->out_c;
     l->inputs = l->outputs;
-    if (l->train) l->delta = (float*)xrealloc(l->delta, l->outputs * l->batch * sizeof(float));
-    l->output = (float*)xrealloc(l->output, l->outputs * l->batch * sizeof(float));
+    if (l->train) l->delta = (float*)xrealloc(l->delta, l->outputs * l->batch * sizeof(float), __FILE__, __LINE__);
+    l->output = (float*)xrealloc(l->output, l->outputs * l->batch * sizeof(float), __FILE__, __LINE__);
 
     int i;
     for (i = 0; i < l->n; ++i) {
@@ -112,7 +112,7 @@ void resize_shortcut_layer(layer *l, int w, int h, network *net)
         assert(l->w == net->layers[index].out_w && l->h == net->layers[index].out_h);
     }
 
-    if (l->activation == SWISH || l->activation == MISH) l->activation_input = (float*)realloc(l->activation_input, l->batch*l->outputs * sizeof(float));
+    if (l->activation == SWISH || l->activation == MISH) l->activation_input = (float*)xrealloc(l->activation_input, l->batch*l->outputs * sizeof(float), __FILE__, __LINE__);
 
 #ifdef GPU
     cuda_free(l->output_gpu);
@@ -123,8 +123,8 @@ void resize_shortcut_layer(layer *l, int w, int h, network *net)
         l->delta_gpu = cuda_make_array(l->delta, l->outputs*l->batch);
     }
 
-    float **layers_output_gpu = (float **)calloc(l->n, sizeof(float *));
-    float **layers_delta_gpu = (float **)calloc(l->n, sizeof(float *));
+    float **layers_output_gpu = (float **)xcalloc(l->n, sizeof(float *), __FILE__, __LINE__);
+    float **layers_delta_gpu = (float **)xcalloc(l->n, sizeof(float *), __FILE__, __LINE__);
 
     for (i = 0; i < l->n; ++i) {
         const int index = l->input_layers[i];

@@ -14,20 +14,20 @@ int *read_tokenized_data(char *filename, size_t *read)
     size_t size = 512;
     size_t count = 0;
     FILE *fp = fopen(filename, "r");
-    int* d = (int*)xcalloc(size, sizeof(int));
+    int* d = (int*)xcalloc(size, sizeof(int), __FILE__, __LINE__);
     int n, one;
     one = fscanf(fp, "%d", &n);
     while(one == 1){
         ++count;
         if(count > size){
             size = size*2;
-            d = (int*)xrealloc(d, size * sizeof(int));
+            d = (int*)xrealloc(d, size * sizeof(int), __FILE__, __LINE__);
         }
         d[count-1] = n;
         one = fscanf(fp, "%d", &n);
     }
     fclose(fp);
-    d = (int*)xrealloc(d, count * sizeof(int));
+    d = (int*)xrealloc(d, count * sizeof(int), __FILE__, __LINE__);
     *read = count;
     return d;
 }
@@ -37,26 +37,26 @@ char **read_tokens(char *filename, size_t *read)
     size_t size = 512;
     size_t count = 0;
     FILE *fp = fopen(filename, "r");
-    char** d = (char**)xcalloc(size, sizeof(char*));
+    char** d = (char**)xcalloc(size, sizeof(char*), __FILE__, __LINE__);
     char *line;
     while((line=fgetl(fp)) != 0){
         ++count;
         if(count > size){
             size = size*2;
-            d = (char**)xrealloc(d, size * sizeof(char*));
+            d = (char**)xrealloc(d, size * sizeof(char*), __FILE__, __LINE__);
         }
         d[count-1] = line;
     }
     fclose(fp);
-    d = (char**)xrealloc(d, count * sizeof(char*));
+    d = (char**)xrealloc(d, count * sizeof(char*), __FILE__, __LINE__);
     *read = count;
     return d;
 }
 
 float_pair get_rnn_token_data(int *tokens, size_t *offsets, int characters, size_t len, int batch, int steps)
 {
-    float* x = (float*)xcalloc(batch * steps * characters, sizeof(float));
-    float* y = (float*)xcalloc(batch * steps * characters, sizeof(float));
+    float* x = (float*)xcalloc(batch * steps * characters, sizeof(float), __FILE__, __LINE__);
+    float* y = (float*)xcalloc(batch * steps * characters, sizeof(float), __FILE__, __LINE__);
     int i,j;
     for(i = 0; i < batch; ++i){
         for(j = 0; j < steps; ++j){
@@ -69,7 +69,7 @@ float_pair get_rnn_token_data(int *tokens, size_t *offsets, int characters, size
             offsets[i] = (offsets[i] + 1) % len;
 
             if(curr >= characters || curr < 0 || next >= characters || next < 0){
-                error("Bad char");
+                error("Bad char", __FILE__, __LINE__);
             }
         }
     }
@@ -81,8 +81,8 @@ float_pair get_rnn_token_data(int *tokens, size_t *offsets, int characters, size
 
 float_pair get_rnn_data(unsigned char *text, size_t *offsets, int characters, size_t len, int batch, int steps)
 {
-    float* x = (float*)xcalloc(batch * steps * characters, sizeof(float));
-    float* y = (float*)xcalloc(batch * steps * characters, sizeof(float));
+    float* x = (float*)xcalloc(batch * steps * characters, sizeof(float), __FILE__, __LINE__);
+    float* y = (float*)xcalloc(batch * steps * characters, sizeof(float), __FILE__, __LINE__);
     int i,j;
     for(i = 0; i < batch; ++i){
         for(j = 0; j < steps; ++j){
@@ -99,7 +99,7 @@ float_pair get_rnn_data(unsigned char *text, size_t *offsets, int characters, si
                 printf("%ld %d %d %d %d\n", index, j, len, (int)text[index+j], (int)text[index+j+1]);
                 printf("%s", text+index);
                 */
-                error("Bad char");
+                error("Bad char", __FILE__, __LINE__);
             }
         }
     }
@@ -137,7 +137,7 @@ void train_char_rnn(char *cfgfile, char *weightfile, char *filename, int clear, 
         size = ftell(fp);
         fseek(fp, 0, SEEK_SET);
 
-        text = (unsigned char *)xcalloc(size + 1, sizeof(char));
+        text = (unsigned char *)xcalloc(size + 1, sizeof(char), __FILE__, __LINE__);
         fread(text, 1, size, fp);
         fclose(fp);
     }
@@ -164,7 +164,7 @@ void train_char_rnn(char *cfgfile, char *weightfile, char *filename, int clear, 
     int streams = batch/steps;
     printf("\n batch = %d, steps = %d, streams = %d, subdivisions = %d, text_size = %ld \n", batch, steps, streams, net.subdivisions, size);
     printf(" global_batch = %d \n", batch*net.subdivisions);
-    size_t* offsets = (size_t*)xcalloc(streams, sizeof(size_t));
+    size_t* offsets = (size_t*)xcalloc(streams, sizeof(size_t), __FILE__, __LINE__);
     int j;
     for(j = 0; j < streams; ++j){
         offsets[j] = rand_size_t()%size;
@@ -247,7 +247,7 @@ void test_char_rnn(char *cfgfile, char *weightfile, int num, char *seed, float t
     for(i = 0; i < net.n; ++i) net.layers[i].temperature = temp;
     int c = 0;
     int len = strlen(seed);
-    float* input = (float*)xcalloc(inputs, sizeof(float));
+    float* input = (float*)xcalloc(inputs, sizeof(float), __FILE__, __LINE__);
 
     /*
        fill_cpu(inputs, 0, input, 1);
@@ -306,7 +306,7 @@ void test_tactic_rnn(char *cfgfile, char *weightfile, int num, float temp, int r
     int i, j;
     for(i = 0; i < net.n; ++i) net.layers[i].temperature = temp;
     int c = 0;
-    float* input = (float*)xcalloc(inputs, sizeof(float));
+    float* input = (float*)xcalloc(inputs, sizeof(float), __FILE__, __LINE__);
     float *out = 0;
 
     while((c = getc(stdin)) != EOF){
@@ -345,7 +345,7 @@ void valid_tactic_rnn(char *cfgfile, char *weightfile, char *seed)
     int words = 1;
     int c;
     int len = strlen(seed);
-    float* input = (float*)xcalloc(inputs, sizeof(float));
+    float* input = (float*)xcalloc(inputs, sizeof(float), __FILE__, __LINE__);
     int i;
     for(i = 0; i < len; ++i){
         c = seed[i];
@@ -360,7 +360,7 @@ void valid_tactic_rnn(char *cfgfile, char *weightfile, char *seed)
     while(c != EOF){
         int next = getc(stdin);
         if(next == EOF) break;
-        if(next < 0 || next >= 255) error("Out of range character");
+        if(next < 0 || next >= 255) error("Out of range character", __FILE__, __LINE__);
 
         input[c] = 1;
         float *out = network_predict(net, input);
@@ -397,7 +397,7 @@ void valid_char_rnn(char *cfgfile, char *weightfile, char *seed)
     int words = 1;
     int c;
     int len = strlen(seed);
-    float* input = (float*)xcalloc(inputs, sizeof(float));
+    float* input = (float*)xcalloc(inputs, sizeof(float), __FILE__, __LINE__);
     int i;
     for(i = 0; i < len; ++i){
         c = seed[i];
@@ -411,7 +411,7 @@ void valid_char_rnn(char *cfgfile, char *weightfile, char *seed)
     while(c != EOF){
         int next = getc(stdin);
         if(next == EOF) break;
-        if(next < 0 || next >= 255) error("Out of range character");
+        if(next < 0 || next >= 255) error("Out of range character", __FILE__, __LINE__);
         ++count;
         if(next == ' ' || next == '\n' || next == '\t') ++words;
         input[c] = 1;
@@ -436,7 +436,7 @@ void vec_char_rnn(char *cfgfile, char *weightfile, char *seed)
 
     int c;
     int seed_len = strlen(seed);
-    float* input = (float*)xcalloc(inputs, sizeof(float));
+    float* input = (float*)xcalloc(inputs, sizeof(float), __FILE__, __LINE__);
     int i;
     char *line;
     while((line=fgetl(stdin)) != 0){

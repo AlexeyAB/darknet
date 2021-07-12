@@ -28,8 +28,8 @@ layer make_scale_channels_layer(int batch, int index, int w, int h, int c, int w
     l.inputs = l.outputs;
     l.index = index;
 
-    l.delta = (float*)xcalloc(l.outputs * batch, sizeof(float));
-    l.output = (float*)xcalloc(l.outputs * batch, sizeof(float));
+    l.delta = (float*)xcalloc(l.outputs * batch, sizeof(float), __FILE__, __LINE__);
+    l.output = (float*)xcalloc(l.outputs * batch, sizeof(float), __FILE__, __LINE__);
 
     l.forward = forward_scale_channels_layer;
     l.backward = backward_scale_channels_layer;
@@ -50,8 +50,8 @@ void resize_scale_channels_layer(layer *l, network *net)
     l->out_h = first.out_h;
     l->outputs = l->out_w*l->out_h*l->out_c;
     l->inputs = l->outputs;
-    l->delta = (float*)xrealloc(l->delta, l->outputs * l->batch * sizeof(float));
-    l->output = (float*)xrealloc(l->output, l->outputs * l->batch * sizeof(float));
+    l->delta = (float*)xrealloc(l->delta, l->outputs * l->batch * sizeof(float), __FILE__, __LINE__);
+    l->output = (float*)xrealloc(l->output, l->outputs * l->batch * sizeof(float), __FILE__, __LINE__);
 
 #ifdef GPU
     cuda_free(l->output_gpu);

@@ -38,23 +38,23 @@ layer make_gaussian_yolo_layer(int batch, int w, int h, int n, int total, int *m
     l.out_h = l.h;
     l.out_c = l.c;
     l.classes = classes;
-    l.cost = (float*)calloc(1, sizeof(float));
-    l.biases = (float*)calloc(total*2, sizeof(float));
+    l.cost = (float*)xcalloc(1, sizeof(float), __FILE__, __LINE__);
+    l.biases = (float*)xcalloc(total*2, sizeof(float), __FILE__, __LINE__);
     if(mask) l.mask = mask;
     else{
-        l.mask = (int*)calloc(n, sizeof(int));
+        l.mask = (int*)xcalloc(n, sizeof(int), __FILE__, __LINE__);
         for(i = 0; i < n; ++i){
             l.mask[i] = i;
         }
     }
-    l.bias_updates = (float*)calloc(n*2, sizeof(float));
+    l.bias_updates = (float*)xcalloc(n*2, sizeof(float), __FILE__, __LINE__);
     l.outputs = h*w*n*(classes + 8 + 1);
     l.inputs = l.outputs;
     l.max_boxes = max_boxes;
 	l.truth_size = 4 + 2;
     l.truths = l.max_boxes*l.truth_size;
-    l.delta = (float*)calloc(batch*l.outputs, sizeof(float));
-    l.output = (float*)calloc(batch*l.outputs, sizeof(float));
+    l.delta = (float*)xcalloc(batch*l.outputs, sizeof(float), __FILE__, __LINE__);
+    l.output = (float*)xcalloc(batch*l.outputs, sizeof(float), __FILE__, __LINE__);
     for(i = 0; i < total*2; ++i){
         l.biases[i] = .5;
     }
@@ -72,14 +72,14 @@ layer make_gaussian_yolo_layer(int batch, int w, int h, int n, int total, int *m
     if (cudaSuccess == cudaHostAlloc(&l.output, batch*l.outputs * sizeof(float), cudaHostRegisterMapped)) l.output_pinned = 1;
     else {
         cudaGetLastError(); // reset CUDA-error
-        l.output = (float*)calloc(batch * l.outputs, sizeof(float));
+        l.output = (float*)xcalloc(batch * l.outputs, sizeof(float), __FILE__, __LINE__);
     }
 
     free(l.delta);
     if (cudaSuccess == cudaHostAlloc(&l.delta, batch*l.outputs * sizeof(float), cudaHostRegisterMapped)) l.delta_pinned = 1;
     else {
         cudaGetLastError(); // reset CUDA-error
-        l.delta = (float*)calloc(batch * l.outputs, sizeof(float));
+        l.delta = (float*)xcalloc(batch * l.outputs, sizeof(float), __FILE__, __LINE__);
     }
 
 #endif
@@ -98,11 +98,11 @@ void resize_gaussian_yolo_layer(layer *l, int w, int h)
     l->outputs = h*w*l->n*(l->classes + 8 + 1);
     l->inputs = l->outputs;
 
-    //l->output = (float *)realloc(l->output, l->batch*l->outputs * sizeof(float));
-    //l->delta = (float *)realloc(l->delta, l->batch*l->outputs * sizeof(float));
+    //l->output = (float *)xrealloc(l->output, l->batch*l->outputs * sizeof(float), __FILE__, __LINE__);
+    //l->delta = (float *)xrealloc(l->delta, l->batch*l->outputs * sizeof(float), __FILE__, __LINE__);
 
-    if (!l->output_pinned) l->output = (float*)realloc(l->output, l->batch*l->outputs * sizeof(float));
-    if (!l->delta_pinned) l->delta = (float*)realloc(l->delta, l->batch*l->outputs * sizeof(float));
+    if (!l->output_pinned) l->output = (float*)xrealloc(l->output, l->batch*l->outputs * sizeof(float), __FILE__, __LINE__);
+    if (!l->delta_pinned) l->delta = (float*)xrealloc(l->delta, l->batch*l->outputs * sizeof(float), __FILE__, __LINE__);
 
 #ifdef GPU
 
@@ -110,7 +110,7 @@ void resize_gaussian_yolo_layer(layer *l, int w, int h)
         CHECK_CUDA(cudaFreeHost(l->output));
         if (cudaSuccess != cudaHostAlloc(&l->output, l->batch*l->outputs * sizeof(float), cudaHostRegisterMapped)) {
             cudaGetLastError(); // reset CUDA-error
-            l->output = (float*)calloc(l->batch * l->outputs, sizeof(float));
+            l->output = (float*)xcalloc(l->batch * l->outputs, sizeof(float), __FILE__, __LINE__);
             l->output_pinned = 0;
         }
     }
@@ -119,7 +119,7 @@ void resize_gaussian_yolo_layer(layer *l, int w, int h)
         CHECK_CUDA(cudaFreeHost(l->delta));
         if (cudaSuccess != cudaHostAlloc(&l->delta, l->batch*l->outputs * sizeof(float), cudaHostRegisterMapped)) {
             cudaGetLastError(); // reset CUDA-error
-            l->delta = (float*)calloc(l->batch * l->outputs, sizeof(float));
+            l->delta = (float*)xcalloc(l->batch * l->outputs, sizeof(float), __FILE__, __LINE__);
             l->delta_pinned = 0;
         }
     }
@@ -639,7 +639,7 @@ void forward_gaussian_yolo_layer(const layer l, network_state state)
 
     // calculate: Classification-loss, IoU-loss and Uncertainty-loss
     const int stride = l.w*l.h;
-    float* classification_lost = (float *)calloc(l.batch * l.outputs, sizeof(float));
+    float* classification_lost = (float *)xcalloc(l.batch * l.outputs, sizeof(float), __FILE__, __LINE__);
     memcpy(classification_lost, l.delta, l.batch * l.outputs * sizeof(float));
 
 
@@ -665,7 +665,7 @@ void forward_gaussian_yolo_layer(const layer l, network_state state)
     free(classification_lost);
 
 
-    float* except_uncertainty_lost = (float *)calloc(l.batch * l.outputs, sizeof(float));
+    float* except_uncertainty_lost = (float *)xcalloc(l.batch * l.outputs, sizeof(float), __FILE__, __LINE__);
     memcpy(except_uncertainty_lost, l.delta, l.batch * l.outputs * sizeof(float));
     for (b = 0; b < l.batch; ++b) {
         for (j = 0; j < l.h; ++j) {
@@ -870,13 +870,13 @@ void forward_gaussian_yolo_layer_gpu(const layer l, network_state state)
         return;
     }
 
-    float *in_cpu = (float *)calloc(l.batch*l.inputs, sizeof(float));
+    float *in_cpu = (float *)xcalloc(l.batch*l.inputs, sizeof(float), __FILE__, __LINE__);
     cuda_pull_array(l.output_gpu, l.output, l.batch*l.outputs);
     memcpy(in_cpu, l.output, l.batch*l.outputs * sizeof(float));
     float *truth_cpu = 0;
     if (state.truth) {
         int num_truth = l.batch*l.truths;
-        truth_cpu = (float *)calloc(num_truth, sizeof(float));
+        truth_cpu = (float *)xcalloc(num_truth, sizeof(float), __FILE__, __LINE__);
         cuda_pull_array(state.truth, truth_cpu, num_truth);
     }
     network_state cpu_state = state;

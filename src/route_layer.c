@@ -25,8 +25,8 @@ route_layer make_route_layer(int batch, int n, int *input_layers, int *input_siz
     l.outputs = outputs;
     l.inputs = outputs;
     //fprintf(stderr, " inputs = %d \t outputs = %d, groups = %d, group_id = %d \n", l.inputs, l.outputs, l.groups, l.group_id);
-    l.delta = (float*)xcalloc(outputs * batch, sizeof(float));
-    l.output = (float*)xcalloc(outputs * batch, sizeof(float));
+    l.delta = (float*)xcalloc(outputs * batch, sizeof(float), __FILE__, __LINE__);
+    l.output = (float*)xcalloc(outputs * batch, sizeof(float), __FILE__, __LINE__);
 
     l.forward = forward_route_layer;
     l.backward = backward_route_layer;
@@ -65,8 +65,8 @@ void resize_route_layer(route_layer *l, network *net)
     l->out_c = l->out_c / l->groups;
     l->outputs = l->outputs / l->groups;
     l->inputs = l->outputs;
-    l->delta = (float*)xrealloc(l->delta, l->outputs * l->batch * sizeof(float));
-    l->output = (float*)xrealloc(l->output, l->outputs * l->batch * sizeof(float));
+    l->delta = (float*)xrealloc(l->delta, l->outputs * l->batch * sizeof(float), __FILE__, __LINE__);
+    l->output = (float*)xrealloc(l->output, l->outputs * l->batch * sizeof(float), __FILE__, __LINE__);
 
 #ifdef GPU
     cuda_free(l->output_gpu);

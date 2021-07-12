@@ -33,7 +33,7 @@ crop_layer make_crop_layer(int batch, int h, int w, int c, int crop_height, int 
     l.out_c = c;
     l.inputs = l.w * l.h * l.c;
     l.outputs = l.out_w * l.out_h * l.out_c;
-    l.output = (float*)xcalloc(l.outputs * batch, sizeof(float));
+    l.output = (float*)xcalloc(l.outputs * batch, sizeof(float), __FILE__, __LINE__);
     l.forward = forward_crop_layer;
     l.backward = backward_crop_layer;
 
@@ -57,7 +57,7 @@ void resize_crop_layer(layer *l, int w, int h)
     l->inputs = l->w * l->h * l->c;
     l->outputs = l->out_h * l->out_w * l->out_c;
 
-    l->output = (float*)xrealloc(l->output, l->batch * l->outputs * sizeof(float));
+    l->output = (float*)xrealloc(l->output, l->batch * l->outputs * sizeof(float), __FILE__, __LINE__);
     #ifdef GPU
     cuda_free(l->output_gpu);
     l->output_gpu = cuda_make_array(l->output, l->outputs*l->batch);

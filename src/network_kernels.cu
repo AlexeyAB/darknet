@@ -64,8 +64,8 @@ void forward_network_gpu(network net, network_state state)
     double start_time, end_time;
     if (net.benchmark_layers) {
         if (!avg_time_per_layer) {
-            avg_time_per_layer = (time_benchmark_layers *)calloc(net.n, sizeof(time_benchmark_layers));
-            sorted_avg_time_per_layer = (time_benchmark_layers *)calloc(net.n, sizeof(time_benchmark_layers));
+            avg_time_per_layer = (time_benchmark_layers *)xcalloc(net.n, sizeof(time_benchmark_layers), __FILE__, __LINE__);
+            sorted_avg_time_per_layer = (time_benchmark_layers *)xcalloc(net.n, sizeof(time_benchmark_layers), __FILE__, __LINE__);
         }
         cudaDeviceSynchronize();
     }
@@ -156,8 +156,8 @@ void backward_network_gpu(network net, network_state state)
     double start_time, end_time;
     if (net.benchmark_layers) {
         if (!avg_time_per_layer) {
-            avg_time_per_layer = (time_benchmark_layers *)calloc(net.n, sizeof(time_benchmark_layers));
-            sorted_avg_time_per_layer = (time_benchmark_layers *)calloc(net.n, sizeof(time_benchmark_layers));
+            avg_time_per_layer = (time_benchmark_layers *)xcalloc(net.n, sizeof(time_benchmark_layers), __FILE__, __LINE__);
+            sorted_avg_time_per_layer = (time_benchmark_layers *)xcalloc(net.n, sizeof(time_benchmark_layers), __FILE__, __LINE__);
         }
         cudaDeviceSynchronize();
     }
@@ -230,8 +230,8 @@ void backward_network_gpu(network net, network_state state)
     if (net.adversarial && net.attention)
     {
         int img_size = net.w * net.h * net.c;
-        float *original_input_cpu = (float *)xcalloc(img_size, sizeof(float));
-        float *original_delta_cpu = (float *)xcalloc(img_size, sizeof(float));
+        float *original_input_cpu = (float *)xcalloc(img_size, sizeof(float), __FILE__, __LINE__);
+        float *original_delta_cpu = (float *)xcalloc(img_size, sizeof(float), __FILE__, __LINE__);
         cuda_pull_array(original_input, original_input_cpu, img_size);
         cuda_pull_array(original_delta, original_delta_cpu, img_size);
 
@@ -379,10 +379,10 @@ float train_network_datum_gpu(network net, float *x, float *y)
         layer l = net.layers[net.n - 1];
         int y_size = get_network_output_size(net)*net.batch;
         if (net.layers[net.n - 1].truths) y_size = net.layers[net.n - 1].truths*net.batch;
-        float *truth_cpu = (float *)xcalloc(y_size, sizeof(float));
+        float *truth_cpu = (float *)xcalloc(y_size, sizeof(float), __FILE__, __LINE__);
 
         const int img_size = net.w*net.h*net.c;
-        float *old_input = (float *)xcalloc(img_size*net.batch, sizeof(float));
+        float *old_input = (float *)xcalloc(img_size*net.batch, sizeof(float), __FILE__, __LINE__);
         memcpy(old_input, x, img_size*net.batch * sizeof(float));
 
         printf("\n adversarial training, adversarial_lr = %f \n", net.adversarial_lr * scale);
@@ -438,11 +438,11 @@ void *train_thread(void *ptr)
 pthread_t train_network_in_thread(network net, data d, float *err)
 {
     pthread_t thread;
-    train_args *ptr = (train_args *)calloc(1, sizeof(train_args));
+    train_args *ptr = (train_args *)xcalloc(1, sizeof(train_args), __FILE__, __LINE__);
     ptr->net = net;
     ptr->d = d;
     ptr->err = err;
-    if(pthread_create(&thread, 0, train_thread, ptr)) error("Thread creation failed");
+    if(pthread_create(&thread, 0, train_thread, ptr)) error("Thread creation failed", __FILE__, __LINE__);
     return thread;
 }
 
@@ -612,11 +612,11 @@ void *sync_layer_thread(void *ptr)
 pthread_t sync_layer_in_thread(network *nets, int n, int j)
 {
     pthread_t thread;
-    sync_args *ptr = (sync_args *)calloc(1, sizeof(sync_args));
+    sync_args *ptr = (sync_args *)xcalloc(1, sizeof(sync_args), __FILE__, __LINE__);
     ptr->nets = nets;
     ptr->n = n;
     ptr->j = j;
-    if(pthread_create(&thread, 0, sync_layer_thread, ptr)) error("Thread creation failed");
+    if(pthread_create(&thread, 0, sync_layer_thread, ptr)) error("Thread creation failed", __FILE__, __LINE__);
     return thread;
 }
 

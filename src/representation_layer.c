@@ -25,14 +25,14 @@ layer make_implicit_layer(int batch, int index, float mean_init, float std_init,
 
     l.nweights = l.out_w * l.out_h * l.out_c;
 
-    l.weight_updates = (float*)xcalloc(l.nweights, sizeof(float));
-    l.weights = (float*)xcalloc(l.nweights, sizeof(float));
+    l.weight_updates = (float*)xcalloc(l.nweights, sizeof(float), __FILE__, __LINE__);
+    l.weights = (float*)xcalloc(l.nweights, sizeof(float), __FILE__, __LINE__);
     int i;
     for (i = 0; i < l.nweights; ++i) l.weights[i] = mean_init + rand_uniform(-std_init, std_init);
 
 
-    l.delta = (float*)xcalloc(l.outputs * batch, sizeof(float));
-    l.output = (float*)xcalloc(l.outputs * batch, sizeof(float));
+    l.delta = (float*)xcalloc(l.outputs * batch, sizeof(float), __FILE__, __LINE__);
+    l.output = (float*)xcalloc(l.outputs * batch, sizeof(float), __FILE__, __LINE__);
 
     l.forward = forward_implicit_layer;
     l.backward = backward_implicit_layer;

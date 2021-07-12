@@ -49,11 +49,11 @@ char **get_sequential_paths(char **paths, int n, int m, int mini_batch, int augm
 {
     int speed = rand_int(1, augment_speed);
     if (speed < 1) speed = 1;
-    char** sequentia_paths = (char**)xcalloc(n, sizeof(char*));
+    char** sequentia_paths = (char**)xcalloc(n, sizeof(char*), __FILE__, __LINE__);
     int i;
     pthread_mutex_lock(&mutex);
     //printf("n = %d, mini_batch = %d \n", n, mini_batch);
-    unsigned int *start_time_indexes = (unsigned int *)xcalloc(mini_batch, sizeof(unsigned int));
+    unsigned int *start_time_indexes = (unsigned int *)xcalloc(mini_batch, sizeof(unsigned int), __FILE__, __LINE__);
     for (i = 0; i < mini_batch; ++i) {
         if (contrastive && (i % 2) == 1) start_time_indexes[i] = start_time_indexes[i - 1];
         else start_time_indexes[i] = random_gen() % m;
@@ -82,7 +82,7 @@ char **get_sequential_paths(char **paths, int n, int m, int mini_batch, int augm
 
 char **get_random_paths_custom(char **paths, int n, int m, int contrastive)
 {
-    char** random_paths = (char**)xcalloc(n, sizeof(char*));
+    char** random_paths = (char**)xcalloc(n, sizeof(char*), __FILE__, __LINE__);
     int i;
     pthread_mutex_lock(&mutex);
     int old_index = 0;
@@ -109,7 +109,7 @@ char **get_random_paths(char **paths, int n, int m)
 
 char **find_replace_paths(char **paths, int n, char *find, char *replace)
 {
-    char** replace_paths = (char**)xcalloc(n, sizeof(char*));
+    char** replace_paths = (char**)xcalloc(n, sizeof(char*), __FILE__, __LINE__);
     int i;
     for(i = 0; i < n; ++i){
         char replaced[4096];
@@ -124,7 +124,7 @@ matrix load_image_paths_gray(char **paths, int n, int w, int h)
     int i;
     matrix X;
     X.rows = n;
-    X.vals = (float**)xcalloc(X.rows, sizeof(float*));
+    X.vals = (float**)xcalloc(X.rows, sizeof(float*), __FILE__, __LINE__);
     X.cols = 0;
 
     for(i = 0; i < n; ++i){
@@ -145,7 +145,7 @@ matrix load_image_paths(char **paths, int n, int w, int h)
     int i;
     matrix X;
     X.rows = n;
-    X.vals = (float**)xcalloc(X.rows, sizeof(float*));
+    X.vals = (float**)xcalloc(X.rows, sizeof(float*), __FILE__, __LINE__);
     X.cols = 0;
 
     for(i = 0; i < n; ++i){
@@ -161,7 +161,7 @@ matrix load_image_augment_paths(char **paths, int n, int use_flip, int min, int 
     int i;
     matrix X;
     X.rows = n;
-    X.vals = (float**)xcalloc(X.rows, sizeof(float*));
+    X.vals = (float**)xcalloc(X.rows, sizeof(float*), __FILE__, __LINE__);
     X.cols = 0;
 
     for(i = 0; i < n; ++i){
@@ -196,7 +196,7 @@ matrix load_image_augment_paths(char **paths, int n, int use_flip, int min, int 
 
 box_label *read_boxes(char *filename, int *n)
 {
-    box_label* boxes = (box_label*)xcalloc(1, sizeof(box_label));
+    box_label* boxes = (box_label*)xcalloc(1, sizeof(box_label), __FILE__, __LINE__);
     FILE *file = fopen(filename, "r");
     if (!file) {
         printf("Can't open label file. (This can be normal only if you use MSCOCO): %s \n", filename);
@@ -221,7 +221,7 @@ box_label *read_boxes(char *filename, int *n)
     int id;
     int count = 0;
     while(fscanf(file, "%d %f %f %f %f", &id, &x, &y, &w, &h) == 5){
-        boxes = (box_label*)xrealloc(boxes, (count + 1) * sizeof(box_label));
+        boxes = (box_label*)xrealloc(boxes, (count + 1) * sizeof(box_label), __FILE__, __LINE__);
         boxes[count].track_id = count + img_hash;
         //printf(" boxes[count].track_id = %d, count = %d \n", boxes[count].track_id, count);
         boxes[count].id = id;
@@ -705,7 +705,7 @@ data load_data_region(int n, char **paths, int m, int w, int h, int size, int cl
     d.shallow = 0;
 
     d.X.rows = n;
-    d.X.vals = (float**)xcalloc(d.X.rows, sizeof(float*));
+    d.X.vals = (float**)xcalloc(d.X.rows, sizeof(float*), __FILE__, __LINE__);
     d.X.cols = h*w*3;
 
 
@@ -759,7 +759,7 @@ data load_data_compare(int n, char **paths, int m, int classes, int w, int h)
     d.shallow = 0;
 
     d.X.rows = n;
-    d.X.vals = (float**)xcalloc(d.X.rows, sizeof(float*));
+    d.X.vals = (float**)xcalloc(d.X.rows, sizeof(float*), __FILE__, __LINE__);
     d.X.cols = h*w*6;
 
     int k = 2*(classes);
@@ -768,7 +768,7 @@ data load_data_compare(int n, char **paths, int m, int classes, int w, int h)
         image im1 = load_image_color(paths[i*2],   w, h);
         image im2 = load_image_color(paths[i*2+1], w, h);
 
-        d.X.vals[i] = (float*)xcalloc(d.X.cols, sizeof(float));
+        d.X.vals[i] = (float*)xcalloc(d.X.cols, sizeof(float), __FILE__, __LINE__);
         memcpy(d.X.vals[i],         im1.data, h*w*3*sizeof(float));
         memcpy(d.X.vals[i] + h*w*3, im2.data, h*w*3*sizeof(float));
 
@@ -830,7 +830,7 @@ data load_data_swag(char **paths, int n, int classes, float jitter)
     d.h = h;
 
     d.X.rows = 1;
-    d.X.vals = (float**)xcalloc(d.X.rows, sizeof(float*));
+    d.X.vals = (float**)xcalloc(d.X.rows, sizeof(float*), __FILE__, __LINE__);
     d.X.cols = h*w*3;
 
     int k = (4+classes)*30;
@@ -1071,8 +1071,8 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int c, int bo
 
     int *cut_x = NULL, *cut_y = NULL;
     if (use_mixup == 3) {
-        cut_x = (int*)calloc(n, sizeof(int));
-        cut_y = (int*)calloc(n, sizeof(int));
+        cut_x = (int*)xcalloc(n, sizeof(int), __FILE__, __LINE__);
+        cut_y = (int*)xcalloc(n, sizeof(int), __FILE__, __LINE__);
         const float min_offset = 0.2; // 20%
         for (i = 0; i < n; ++i) {
             cut_x[i] = rand_int(w*min_offset, w*(1 - min_offset));
@@ -1084,7 +1084,7 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int c, int bo
     d.shallow = 0;
 
     d.X.rows = n;
-    d.X.vals = (float**)xcalloc(d.X.rows, sizeof(float*));
+    d.X.vals = (float**)xcalloc(d.X.rows, sizeof(float*), __FILE__, __LINE__);
     d.X.cols = h*w*c;
 
     float r1 = 0, r2 = 0, r3 = 0, r4 = 0, r_scale = 0;
@@ -1102,7 +1102,7 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int c, int bo
         else random_paths = get_random_paths_custom(paths, n, m, contrastive);
 
         for (i = 0; i < n; ++i) {
-            float *truth = (float*)xcalloc(truth_size * boxes, sizeof(float));
+            float *truth = (float*)xcalloc(truth_size * boxes, sizeof(float), __FILE__, __LINE__);
             const char *filename = random_paths[i];
 
             int flag = (c >= 3);
@@ -1403,7 +1403,7 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int c, int bo
     d.shallow = 0;
 
     d.X.rows = n;
-    d.X.vals = (float**)xcalloc(d.X.rows, sizeof(float*));
+    d.X.vals = (float**)xcalloc(d.X.rows, sizeof(float*), __FILE__, __LINE__);
     d.X.cols = h*w*c;
 
     float r1 = 0, r2 = 0, r3 = 0, r4 = 0, r_scale;
@@ -1416,7 +1416,7 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int c, int bo
     for (i_mixup = 0; i_mixup <= mixup; i_mixup++) {
         if (i_mixup) augmentation_calculated = 0;
         for (i = 0; i < n; ++i) {
-            float *truth = (float*)xcalloc(truth_size * boxes, sizeof(float));
+            float *truth = (float*)xcalloc(truth_size * boxes, sizeof(float), __FILE__, __LINE__);
             char *filename = (i_mixup) ? mixup_random_paths[i] : random_paths[i];
 
             image orig = load_image(filename, 0, 0, c);
@@ -1615,9 +1615,9 @@ void *load_thread(void *ptr)
 pthread_t load_data_in_thread(load_args args)
 {
     pthread_t thread;
-    struct load_args* ptr = (load_args*)xcalloc(1, sizeof(struct load_args));
+    struct load_args* ptr = (load_args*)xcalloc(1, sizeof(struct load_args), __FILE__, __LINE__);
     *ptr = args;
-    if(pthread_create(&thread, 0, load_thread, ptr)) error("Thread creation failed");
+    if(pthread_create(&thread, 0, load_thread, ptr)) error("Thread creation failed", __FILE__, __LINE__);
     return thread;
 }
 
@@ -1643,7 +1643,7 @@ void *run_thread_loop(void *ptr)
         }
 
         pthread_mutex_lock(&mtx_load_data);
-        load_args *args_local = (load_args *)xcalloc(1, sizeof(load_args));
+        load_args *args_local = (load_args *)xcalloc(1, sizeof(load_args), __FILE__, __LINE__);
         *args_local = args_swap[i];
         pthread_mutex_unlock(&mtx_load_data);
 
@@ -1664,17 +1664,17 @@ void *load_threads(void *ptr)
     data *out = args.d;
     int total = args.n;
     free(ptr);
-    data* buffers = (data*)xcalloc(args.threads, sizeof(data));
+    data* buffers = (data*)xcalloc(args.threads, sizeof(data), __FILE__, __LINE__);
     if (!threads) {
-        threads = (pthread_t*)xcalloc(args.threads, sizeof(pthread_t));
-        run_load_data = (volatile int *)xcalloc(args.threads, sizeof(int));
-        args_swap = (load_args *)xcalloc(args.threads, sizeof(load_args));
-        fprintf(stderr, " Create %d permanent cpu-threads \n", args.threads);
+        threads = (pthread_t*)xcalloc(args.threads, sizeof(pthread_t), __FILE__, __LINE__);
+        run_load_data = (volatile int *)xcalloc(args.threads, sizeof(int), __FILE__, __LINE__);
+        args_swap = (load_args *)xcalloc(args.threads, sizeof(load_args), __FILE__, __LINE__);
+        fprintf(stderr, " Create %d permanent cpu-threads\n", args.threads);
 
         for (i = 0; i < args.threads; ++i) {
-            int* ptr = (int*)xcalloc(1, sizeof(int));
+            int* ptr = (int*)xcalloc(1, sizeof(int), __FILE__, __LINE__);
             *ptr = i;
-            if (pthread_create(&threads[i], 0, run_thread_loop, ptr)) error("Thread creation failed");
+            if (pthread_create(&threads[i], 0, run_thread_loop, ptr)) error("Thread creation failed", __FILE__, __LINE__);
         }
     }
 
@@ -1736,9 +1736,9 @@ void free_load_threads(void *ptr)
 pthread_t load_data(load_args args)
 {
     pthread_t thread;
-    struct load_args* ptr = (load_args*)xcalloc(1, sizeof(struct load_args));
+    struct load_args* ptr = (load_args*)xcalloc(1, sizeof(struct load_args), __FILE__, __LINE__);
     *ptr = args;
-    if(pthread_create(&thread, 0, load_threads, ptr)) error("Thread creation failed");
+    if(pthread_create(&thread, 0, load_threads, ptr)) error("Thread creation failed", __FILE__, __LINE__);
     return thread;
 }
 
@@ -1790,11 +1790,11 @@ data load_data_super(char **paths, int n, int m, int w, int h, int scale)
 
     int i;
     d.X.rows = n;
-    d.X.vals = (float**)xcalloc(n, sizeof(float*));
+    d.X.vals = (float**)xcalloc(n, sizeof(float*), __FILE__, __LINE__);
     d.X.cols = w*h*3;
 
     d.y.rows = n;
-    d.y.vals = (float**)xcalloc(n, sizeof(float*));
+    d.y.vals = (float**)xcalloc(n, sizeof(float*), __FILE__, __LINE__);
     d.y.cols = w*scale * h*scale * 3;
 
     for(i = 0; i < n; ++i){
@@ -2024,7 +2024,7 @@ matrix concat_matrix(matrix m1, matrix m2)
     matrix m;
     m.cols = m1.cols;
     m.rows = m1.rows+m2.rows;
-    m.vals = (float**)xcalloc(m1.rows + m2.rows, sizeof(float*));
+    m.vals = (float**)xcalloc(m1.rows + m2.rows, sizeof(float*), __FILE__, __LINE__);
     for(i = 0; i < m1.rows; ++i){
         m.vals[count++] = m1.vals[i];
     }
@@ -2276,8 +2276,8 @@ data get_random_data(data d, int num)
     r.X.cols = d.X.cols;
     r.y.cols = d.y.cols;
 
-    r.X.vals = (float**)xcalloc(num, sizeof(float*));
-    r.y.vals = (float**)xcalloc(num, sizeof(float*));
+    r.X.vals = (float**)xcalloc(num, sizeof(float*), __FILE__, __LINE__);
+    r.y.vals = (float**)xcalloc(num, sizeof(float*), __FILE__, __LINE__);
 
     int i;
     for(i = 0; i < num; ++i){
@@ -2290,7 +2290,7 @@ data get_random_data(data d, int num)
 
 data *split_data(data d, int part, int total)
 {
-    data* split = (data*)xcalloc(2, sizeof(data));
+    data* split = (data*)xcalloc(2, sizeof(data), __FILE__, __LINE__);
     int i;
     int start = part*d.X.rows/total;
     int end = (part+1)*d.X.rows/total;
@@ -2303,10 +2303,10 @@ data *split_data(data d, int part, int total)
     train.X.cols = test.X.cols = d.X.cols;
     train.y.cols = test.y.cols = d.y.cols;
 
-    train.X.vals = (float**)xcalloc(train.X.rows, sizeof(float*));
-    test.X.vals = (float**)xcalloc(test.X.rows, sizeof(float*));
-    train.y.vals = (float**)xcalloc(train.y.rows, sizeof(float*));
-    test.y.vals = (float**)xcalloc(test.y.rows, sizeof(float*));
+    train.X.vals = (float**)xcalloc(train.X.rows, sizeof(float*), __FILE__, __LINE__);
+    test.X.vals = (float**)xcalloc(test.X.rows, sizeof(float*), __FILE__, __LINE__);
+    train.y.vals = (float**)xcalloc(train.y.rows, sizeof(float*), __FILE__, __LINE__);
+    test.y.vals = (float**)xcalloc(test.y.rows, sizeof(float*), __FILE__, __LINE__);
 
     for(i = 0; i < start; ++i){
         train.X.vals[i] = d.X.vals[i];

@@ -25,26 +25,26 @@
 #pragma warning(disable: 4996)
 #endif
 
-void *xmalloc(size_t size) {
+void *xmalloc(size_t size, const char *filename, const int linenum) {
     void *ptr=malloc(size);
     if(!ptr) {
-        malloc_error();
+        malloc_error(size, filename, linenum);
     }
     return ptr;
 }
 
-void *xcalloc(size_t nmemb, size_t size) {
+void *xcalloc(size_t nmemb, size_t size, const char *filename, const int linenum) {
     void *ptr=calloc(nmemb,size);
     if(!ptr) {
-        calloc_error();
+        calloc_error(size, filename, linenum);
     }
     return ptr;
 }
 
-void *xrealloc(void *ptr, size_t size) {
+void *xrealloc(void *ptr, size_t size, const char *filename, const int linenum) {
     ptr=realloc(ptr,size);
     if(!ptr) {
-        realloc_error();
+        realloc_error(size, filename, linenum);
     }
     return ptr;
 }
@@ -67,7 +67,7 @@ int *read_map(char *filename)
     if(!file) file_error(filename);
     while((str=fgetl(file))){
         ++n;
-        map = (int*)xrealloc(map, n * sizeof(int));
+        map = (int*)xrealloc(map, n * sizeof(int), __FILE__, __LINE__);
         map[n-1] = atoi(str);
         free(str);
     }
@@ -89,7 +89,7 @@ void sorta_shuffle(void *arr, size_t n, size_t size, size_t sections)
 void shuffle(void *arr, size_t n, size_t size)
 {
     size_t i;
-    void* swp = (void*)xcalloc(1, size);
+    void* swp = (void*)xcalloc(1, size, __FILE__, __LINE__);
     for(i = 0; i < n-1; ++i){
         size_t j = i + random_gen()/(RAND_MAX / (n-i)+1);
         memcpy(swp,            (char*)arr+(j*size), size);
@@ -205,7 +205,7 @@ void pm(int M, int N, float *A)
 
 void find_replace(const char* str, char* orig, char* rep, char* output)
 {
-    char* buffer = (char*)calloc(8192, sizeof(char));
+    char* buffer = (char*)xcalloc(8192, sizeof(char), __FILE__, __LINE__);
     char *p;
 
     sprintf(buffer, "%s", str);
@@ -223,7 +223,7 @@ void find_replace(const char* str, char* orig, char* rep, char* output)
 
 void trim(char *str)
 {
-    char* buffer = (char*)xcalloc(8192, sizeof(char));
+    char* buffer = (char*)xcalloc(8192, sizeof(char), __FILE__, __LINE__);
     sprintf(buffer, "%s", str);
 
     char *p = buffer;
@@ -241,7 +241,7 @@ void trim(char *str)
 
 void find_replace_extension(char *str, char *orig, char *rep, char *output)
 {
-    char* buffer = (char*)calloc(8192, sizeof(char));
+    char* buffer = (char*)xcalloc(8192, sizeof(char), __FILE__, __LINE__);
 
     sprintf(buffer, "%s", str);
     char *p = strstr(buffer, orig);
@@ -325,29 +325,50 @@ void top_k(float *a, int n, int k, int *index)
     }
 }
 
-void error(const char *s)
+void error(const char *s, const char *filename, const int linenum)
 {
+    fprintf(stderr, "Darknet failure detected at %s:%d.\n", filename, linenum);
     perror(s);
-    assert(0);
+    //assert(0);
     exit(EXIT_FAILURE);
 }
 
-void malloc_error()
+char * number_to_bytes(const size_t size)
 {
-    fprintf(stderr, "xMalloc error - possibly out of CPU RAM \n");
-    exit(EXIT_FAILURE);
+    static char buffer[50] = "";
+    if (size < 1024)
+    {
+        sprintf(buffer, "%lu bytes", size);
+        return buffer;
 }
 
-void calloc_error()
+    if (size < (1024 * 1024))
 {
-    fprintf(stderr, "Calloc error - possibly out of CPU RAM \n");
-    exit(EXIT_FAILURE);
+        sprintf(buffer, "%lu KiB", size);
+        return buffer;
 }
 
-void realloc_error()
+    sprintf(buffer, "%lu MiB", size);
+
+    return buffer;
+}
+
+void malloc_error(const size_t size, const char *filename, const int linenum)
 {
-    fprintf(stderr, "Realloc error - possibly out of CPU RAM \n");
-    exit(EXIT_FAILURE);
+    fprintf(stderr, "Size of memory that failed to malloc: %s\n", number_to_bytes(size));
+    error("Malloc error - possibly out of CPU RAM", filename, linenum);
+}
+
+void calloc_error(const size_t size, const char *filename, const int linenum)
+{
+    fprintf(stderr, "Size of memory that failed to calloc: %s\n", number_to_bytes(size));
+    error("Calloc error - possibly out of CPU RAM", filename, linenum);
+}
+
+void realloc_error(const size_t size, const char *filename, const int linenum)
+{
+    fprintf(stderr, "Size of memory that failed to realloc: %s\n", number_to_bytes(size));
+    error("Realloc error - possibly out of CPU RAM", filename, linenum);
 }
 
 void file_error(char *s)
@@ -422,7 +443,7 @@ char *fgetl(FILE *fp)
 {
     if(feof(fp)) return 0;
     size_t size = 512;
-    char* line = (char*)xmalloc(size * sizeof(char));
+    char* line = (char*)xmalloc(size * sizeof(char), __FILE__, __LINE__);
     if(!fgets(line, size, fp)){
         free(line);
         return 0;
@@ -433,7 +454,7 @@ char *fgetl(FILE *fp)
     while((line[curr-1] != '\n') && !feof(fp)){
         if(curr == size-1){
             size *= 2;
-            line = (char*)xrealloc(line, size * sizeof(char));
+            line = (char*)xrealloc(line, size * sizeof(char), __FILE__, __LINE__);
         }
         size_t readsize = size-curr;
         if(readsize > INT_MAX) readsize = INT_MAX-1;
@@ -460,7 +481,7 @@ int read_int(int fd)
 void write_int(int fd, int n)
 {
     int next = write(fd, &n, sizeof(int));
-    if(next <= 0) error("read failed");
+    if(next <= 0) error("read failed", __FILE__, __LINE__);
 }
 
 int read_all_fail(int fd, char *buffer, size_t bytes)
@@ -490,7 +511,7 @@ void read_all(int fd, char *buffer, size_t bytes)
     size_t n = 0;
     while(n < bytes){
         int next = read(fd, buffer + n, bytes-n);
-        if(next <= 0) error("read failed");
+        if(next <= 0) error("read failed", __FILE__, __LINE__);
         n += next;
     }
 }
@@ -500,7 +521,7 @@ void write_all(int fd, char *buffer, size_t bytes)
     size_t n = 0;
     while(n < bytes){
         size_t next = write(fd, buffer + n, bytes-n);
-        if(next <= 0) error("write failed");
+        if(next <= 0) error("write failed", __FILE__, __LINE__);
         n += next;
     }
 }
@@ -511,7 +532,7 @@ char *copy_string(char *s)
     if(!s) {
         return NULL;
     }
-    char* copy = (char*)xmalloc(strlen(s) + 1);
+    char* copy = (char*)xmalloc(strlen(s) + 1, __FILE__, __LINE__);
     strncpy(copy, s, strlen(s)+1);
     return copy;
 }
@@ -547,7 +568,7 @@ int count_fields(char *line)
 
 float *parse_fields(char *line, int n)
 {
-    float* field = (float*)xcalloc(n, sizeof(float));
+    float* field = (float*)xcalloc(n, sizeof(float), __FILE__, __LINE__);
     char *c, *p, *end;
     int count = 0;
     int done = 0;
@@ -735,8 +756,8 @@ int max_index(float *a, int n)
 int top_max_index(float *a, int n, int k)
 {
     if (n <= 0) return -1;
-    float *values = (float*)xcalloc(k, sizeof(float));
-    int *indexes = (int*)xcalloc(k, sizeof(int));
+    float *values = (float*)xcalloc(k, sizeof(float), __FILE__, __LINE__);
+    int *indexes = (int*)xcalloc(k, sizeof(int), __FILE__, __LINE__);
     int i, j;
     for (i = 0; i < n; ++i) {
         for (j = 0; j < k; ++j) {
@@ -849,9 +870,9 @@ float rand_scale(float s)
 float **one_hot_encode(float *a, int n, int k)
 {
     int i;
-    float** t = (float**)xcalloc(n, sizeof(float*));
+    float** t = (float**)xcalloc(n, sizeof(float*), __FILE__, __LINE__);
     for(i = 0; i < n; ++i){
-        t[i] = (float*)xcalloc(k, sizeof(float));
+        t[i] = (float*)xcalloc(k, sizeof(float), __FILE__, __LINE__);
         int index = (int)a[i];
         t[i][index] = 1;
     }
@@ -980,7 +1001,7 @@ int check_array_is_inf(float *arr, int size)
 
 int *random_index_order(int min, int max)
 {
-    int *inds = (int *)xcalloc(max - min, sizeof(int));
+    int *inds = (int *)xcalloc(max - min, sizeof(int), __FILE__, __LINE__);
     int i;
     for (i = min; i < max; ++i) {
         inds[i - min] = i;

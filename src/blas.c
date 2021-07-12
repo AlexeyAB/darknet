@@ -35,7 +35,7 @@ void reorg_cpu(float *x, int out_w, int out_h, int out_c, int batch, int stride,
 
 void flatten(float *x, int size, int layers, int batch, int forward)
 {
-    float* swap = (float*)xcalloc(size * layers * batch, sizeof(float));
+    float* swap = (float*)xcalloc(size * layers * batch, sizeof(float), __FILE__, __LINE__);
     int i,c,b;
     for(b = 0; b < batch; ++b){
         for(c = 0; c < layers; ++c){
@@ -204,7 +204,7 @@ void backward_shortcut_multilayer_cpu(int size, int src_outputs, int batch, int 
             int add_outputs = outputs_of_layers[i];
             if (src_i < add_outputs) {
                 int add_index = add_outputs*src_b + src_i;
-                int out_index = id;
+                //int out_index = id;
 
                 float *layer_delta = layers_delta[i];
                 if (weights) {

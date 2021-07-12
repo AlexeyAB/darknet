@@ -6,7 +6,7 @@
 
 list *make_list()
 {
-    list* l = (list*)xmalloc(sizeof(list));
+    list* l = (list*)xmalloc(sizeof(list), __FILE__, __LINE__);
     l->size = 0;
     l->front = 0;
     l->back = 0;
@@ -41,7 +41,7 @@ void *list_pop(list *l){
 
 void list_insert(list *l, void *val)
 {
-    node* newnode = (node*)xmalloc(sizeof(node));
+    node* newnode = (node*)xmalloc(sizeof(node), __FILE__, __LINE__);
     newnode->val = val;
     newnode->next = 0;
 
@@ -105,7 +105,7 @@ void free_list_contents_kvp(list *l)
 
 void **list_to_array(list *l)
 {
-    void** a = (void**)xcalloc(l->size, sizeof(void*));
+    void** a = (void**)xcalloc(l->size, sizeof(void*), __FILE__, __LINE__);
     int count = 0;
     node *n = l->front;
     while(n){

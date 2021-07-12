@@ -164,11 +164,11 @@ LIB_API Detector::Detector(std::string cfg_filename, std::string weight_filename
     layer l = net.layers[net.n - 1];
     int j;
 
-    detector_gpu.avg = (float *)calloc(l.outputs, sizeof(float));
-    for (j = 0; j < NFRAMES; ++j) detector_gpu.predictions[j] = (float*)calloc(l.outputs, sizeof(float));
+    detector_gpu.avg = (float *)xcalloc(l.outputs, sizeof(float), __FILE__, __LINE__);
+    for (j = 0; j < NFRAMES; ++j) detector_gpu.predictions[j] = (float*)xcalloc(l.outputs, sizeof(float), __FILE__, __LINE__);
     for (j = 0; j < NFRAMES; ++j) detector_gpu.images[j] = make_image(1, 1, 3);
 
-    detector_gpu.track_id = (unsigned int *)calloc(l.classes, sizeof(unsigned int));
+    detector_gpu.track_id = (unsigned int *)xcalloc(l.classes, sizeof(unsigned int), __FILE__, __LINE__);
     for (j = 0; j < l.classes; ++j) detector_gpu.track_id[j] = 1;
 
 #ifdef GPU

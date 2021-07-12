@@ -28,8 +28,8 @@ layer make_reorg_layer(int batch, int w, int h, int c, int stride, int reverse)
     l.outputs = l.out_h * l.out_w * l.out_c;
     l.inputs = h*w*c;
     int output_size = l.out_h * l.out_w * l.out_c * batch;
-    l.output = (float*)xcalloc(output_size, sizeof(float));
-    l.delta = (float*)xcalloc(output_size, sizeof(float));
+    l.output = (float*)xcalloc(output_size, sizeof(float), __FILE__, __LINE__);
+    l.delta = (float*)xcalloc(output_size, sizeof(float), __FILE__, __LINE__);
 
     l.forward = forward_reorg_layer;
     l.backward = backward_reorg_layer;
@@ -65,8 +65,8 @@ void resize_reorg_layer(layer *l, int w, int h)
     l->inputs = l->outputs;
     int output_size = l->outputs * l->batch;
 
-    l->output = (float*)xrealloc(l->output, output_size * sizeof(float));
-    l->delta = (float*)xrealloc(l->delta, output_size * sizeof(float));
+    l->output = (float*)xrealloc(l->output, output_size * sizeof(float), __FILE__, __LINE__);
+    l->delta = (float*)xrealloc(l->delta, output_size * sizeof(float), __FILE__, __LINE__);
 
 #ifdef GPU
     cuda_free(l->output_gpu);

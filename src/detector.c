@@ -65,7 +65,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
     printf("%s\n", base);
     float avg_loss = -1;
     float avg_contrastive_acc = 0;
-    network* nets = (network*)xcalloc(ngpus, sizeof(network));
+    network* nets = (network*)xcalloc(ngpus, sizeof(network), __FILE__, __LINE__);
 
     srand(time(0));
     int seed = rand();
@@ -709,7 +709,7 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *out
     }
     else {
         if (!outfile) outfile = "comp4_det_test_";
-        fps = (FILE**) xcalloc(classes, sizeof(FILE *));
+        fps = (FILE**) xcalloc(classes, sizeof(FILE *), __FILE__, __LINE__);
         for (j = 0; j < classes; ++j) {
             snprintf(buff, 1024, "%s/%s%s.txt", prefix, outfile, names[j]);
             fps[j] = fopen(buff, "w");
@@ -726,11 +726,11 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *out
 
     int nthreads = 4;
     if (m < 4) nthreads = m;
-    image* val = (image*)xcalloc(nthreads, sizeof(image));
-    image* val_resized = (image*)xcalloc(nthreads, sizeof(image));
-    image* buf = (image*)xcalloc(nthreads, sizeof(image));
-    image* buf_resized = (image*)xcalloc(nthreads, sizeof(image));
-    pthread_t* thr = (pthread_t*)xcalloc(nthreads, sizeof(pthread_t));
+    image* val = (image*)xcalloc(nthreads, sizeof(image), __FILE__, __LINE__);
+    image* val_resized = (image*)xcalloc(nthreads, sizeof(image), __FILE__, __LINE__);
+    image* buf = (image*)xcalloc(nthreads, sizeof(image), __FILE__, __LINE__);
+    image* buf_resized = (image*)xcalloc(nthreads, sizeof(image), __FILE__, __LINE__);
+    pthread_t* thr = (pthread_t*)xcalloc(nthreads, sizeof(pthread_t), __FILE__, __LINE__);
 
     load_args args = { 0 };
     args.w = net.w;
@@ -998,11 +998,11 @@ float validate_detector_map(char *datacfg, char *cfgfile, char *weightfile, floa
 
     int nthreads = 4;
     if (m < 4) nthreads = m;
-    image* val = (image*)xcalloc(nthreads, sizeof(image));
-    image* val_resized = (image*)xcalloc(nthreads, sizeof(image));
-    image* buf = (image*)xcalloc(nthreads, sizeof(image));
-    image* buf_resized = (image*)xcalloc(nthreads, sizeof(image));
-    pthread_t* thr = (pthread_t*)xcalloc(nthreads, sizeof(pthread_t));
+    image* val = (image*)xcalloc(nthreads, sizeof(image), __FILE__, __LINE__);
+    image* val_resized = (image*)xcalloc(nthreads, sizeof(image), __FILE__, __LINE__);
+    image* buf = (image*)xcalloc(nthreads, sizeof(image), __FILE__, __LINE__);
+    image* buf_resized = (image*)xcalloc(nthreads, sizeof(image), __FILE__, __LINE__);
+    pthread_t* thr = (pthread_t*)xcalloc(nthreads, sizeof(pthread_t), __FILE__, __LINE__);
 
     load_args args = { 0 };
     args.w = net.w;
@@ -1017,16 +1017,16 @@ float validate_detector_map(char *datacfg, char *cfgfile, char *weightfile, floa
     int tp_for_thresh = 0;
     int fp_for_thresh = 0;
 
-    box_prob* detections = (box_prob*)xcalloc(1, sizeof(box_prob));
+    box_prob* detections = (box_prob*)xcalloc(1, sizeof(box_prob), __FILE__, __LINE__);
     int detections_count = 0;
     int unique_truth_count = 0;
 
-    int* truth_classes_count = (int*)xcalloc(classes, sizeof(int));
+    int* truth_classes_count = (int*)xcalloc(classes, sizeof(int), __FILE__, __LINE__);
 
     // For multi-class precision and recall computation
-    float *avg_iou_per_class = (float*)xcalloc(classes, sizeof(float));
-    int *tp_for_thresh_per_class = (int*)xcalloc(classes, sizeof(int));
-    int *fp_for_thresh_per_class = (int*)xcalloc(classes, sizeof(int));
+    float *avg_iou_per_class = (float*)xcalloc(classes, sizeof(float), __FILE__, __LINE__);
+    int *tp_for_thresh_per_class = (int*)xcalloc(classes, sizeof(int), __FILE__, __LINE__);
+    int *fp_for_thresh_per_class = (int*)xcalloc(classes, sizeof(int), __FILE__, __LINE__);
 
     for (t = 0; t < nthreads; ++t) {
         args.path = paths[i + t];
@@ -1104,7 +1104,7 @@ float validate_detector_map(char *datacfg, char *cfgfile, char *weightfile, floa
                     float prob = dets[i].prob[class_id];
                     if (prob > 0) {
                         detections_count++;
-                        detections = (box_prob*)xrealloc(detections, detections_count * sizeof(box_prob));
+                        detections = (box_prob*)xrealloc(detections, detections_count * sizeof(box_prob), __FILE__, __LINE__);
                         detections[detections_count - 1].b = dets[i].bbox;
                         detections[detections_count - 1].p = prob;
                         detections[detections_count - 1].image_index = image_index;
@@ -1210,19 +1210,19 @@ float validate_detector_map(char *datacfg, char *cfgfile, char *weightfile, floa
     } pr_t;
 
     // for PR-curve
-    pr_t** pr = (pr_t**)xcalloc(classes, sizeof(pr_t*));
+    pr_t** pr = (pr_t**)xcalloc(classes, sizeof(pr_t*), __FILE__, __LINE__);
     for (i = 0; i < classes; ++i) {
-        pr[i] = (pr_t*)xcalloc(detections_count, sizeof(pr_t));
+        pr[i] = (pr_t*)xcalloc(detections_count, sizeof(pr_t), __FILE__, __LINE__);
     }
     printf("\n detections_count = %d, unique_truth_count = %d  \n", detections_count, unique_truth_count);
 
 
-    int* detection_per_class_count = (int*)xcalloc(classes, sizeof(int));
+    int* detection_per_class_count = (int*)xcalloc(classes, sizeof(int), __FILE__, __LINE__);
     for (j = 0; j < detections_count; ++j) {
         detection_per_class_count[detections[j].class_id]++;
     }
 
-    int* truth_flags = (int*)xcalloc(unique_truth_count, sizeof(int));
+    int* truth_flags = (int*)xcalloc(unique_truth_count, sizeof(int), __FILE__, __LINE__);
 
     int rank;
     for (rank = 0; rank < detections_count; ++rank) {
@@ -1428,7 +1428,7 @@ void calc_anchors(char *datacfg, int num_of_clusters, int width, int height, int
     }
 
     //float pointsdata[] = { 1,1, 2,2, 6,6, 5,5, 10,10 };
-    float* rel_width_height_array = (float*)xcalloc(1000, sizeof(float));
+    float* rel_width_height_array = (float*)xcalloc(1000, sizeof(float), __FILE__, __LINE__);
 
 
     list *options = read_data_cfg(datacfg);
@@ -1438,7 +1438,7 @@ void calc_anchors(char *datacfg, int num_of_clusters, int width, int height, int
     char **paths = (char **)list_to_array(plist);
 
     int classes = option_find_int(options, "classes", 1);
-    int* counter_per_class = (int*)xcalloc(classes, sizeof(int));
+    int* counter_per_class = (int*)xcalloc(classes, sizeof(int), __FILE__, __LINE__);
 
     srand(time(0));
     int number_of_boxes = 0;
@@ -1453,7 +1453,7 @@ void calc_anchors(char *datacfg, int num_of_clusters, int width, int height, int
         int num_labels = 0;
         box_label *truth = read_boxes(labelpath, &num_labels);
         //printf(" new path: %s \n", labelpath);
-        char *buff = (char*)xcalloc(6144, sizeof(char));
+        char *buff = (char*)xcalloc(6144, sizeof(char), __FILE__, __LINE__);
         for (j = 0; j < num_labels; ++j)
         {
             if (truth[j].x > 1 || truth[j].x <= 0 || truth[j].y > 1 || truth[j].y <= 0 ||
@@ -1468,12 +1468,12 @@ void calc_anchors(char *datacfg, int num_of_clusters, int width, int height, int
             }
             if (truth[j].id >= classes) {
                 classes = truth[j].id + 1;
-                counter_per_class = (int*)xrealloc(counter_per_class, classes * sizeof(int));
+                counter_per_class = (int*)xrealloc(counter_per_class, classes * sizeof(int), __FILE__, __LINE__);
             }
             counter_per_class[truth[j].id]++;
 
             number_of_boxes++;
-            rel_width_height_array = (float*)xrealloc(rel_width_height_array, 2 * number_of_boxes * sizeof(float));
+            rel_width_height_array = (float*)xrealloc(rel_width_height_array, 2 * number_of_boxes * sizeof(float), __FILE__, __LINE__);
 
             rel_width_height_array[number_of_boxes * 2 - 2] = truth[j].w * width;
             rel_width_height_array[number_of_boxes * 2 - 1] = truth[j].h * height;
@@ -1631,7 +1631,7 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
     if (outfile) {
         json_file = fopen(outfile, "wb");
         if(!json_file) {
-          error("fopen failed");
+            error("fopen failed", __FILE__, __LINE__);
         }
         char *tmp = "[\n";
         fwrite(tmp, sizeof(char), strlen(tmp), json_file);
@@ -1834,11 +1834,11 @@ void draw_object(char *datacfg, char *cfgfile, char *weightfile, char *filename,
 
         net.num_boxes = l.max_boxes;
         int num_truth = l.truths;
-        float *truth_cpu = (float *)xcalloc(num_truth, sizeof(float));
+        float *truth_cpu = (float *)xcalloc(num_truth, sizeof(float), __FILE__, __LINE__);
 
-        int *it_num_set = (int *)xcalloc(1, sizeof(int));
-        float *lr_set = (float *)xcalloc(1, sizeof(float));
-        int *boxonly = (int *)xcalloc(1, sizeof(int));
+        int *it_num_set = (int *)xcalloc(1, sizeof(int), __FILE__, __LINE__);
+        float *lr_set = (float *)xcalloc(1, sizeof(float), __FILE__, __LINE__);
+        int *boxonly = (int *)xcalloc(1, sizeof(int), __FILE__, __LINE__);
 
         cv_draw_object(sized, truth_cpu, net.num_boxes, num_truth, it_num_set, lr_set, boxonly, l.classes, names);
 
@@ -1991,7 +1991,7 @@ void run_detector(int argc, char **argv)
         for (i = 0; i < len; ++i) {
             if (gpu_list[i] == ',') ++ngpus;
         }
-        gpus = (int*)xcalloc(ngpus, sizeof(int));
+        gpus = (int*)xcalloc(ngpus, sizeof(int), __FILE__, __LINE__);
         for (i = 0; i < ngpus; ++i) {
             gpus[i] = atoi(gpu_list);
             gpu_list = strchr(gpu_list, ',') + 1;

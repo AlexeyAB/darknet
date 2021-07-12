@@ -110,10 +110,10 @@ maxpool_layer make_maxpool_layer(int batch, int h, int w, int c, int size, int s
     int output_size = l.out_h * l.out_w * l.out_c * batch;
 
     if (train) {
-        if (!avgpool) l.indexes = (int*)xcalloc(output_size, sizeof(int));
-        l.delta = (float*)xcalloc(output_size, sizeof(float));
+        if (!avgpool) l.indexes = (int*)xcalloc(output_size, sizeof(int), __FILE__, __LINE__);
+        l.delta = (float*)xcalloc(output_size, sizeof(float), __FILE__, __LINE__);
     }
-    l.output = (float*)xcalloc(output_size, sizeof(float));
+    l.output = (float*)xcalloc(output_size, sizeof(float), __FILE__, __LINE__);
     if (avgpool) {
         l.forward = forward_local_avgpool_layer;
         l.backward = backward_local_avgpool_layer;
@@ -160,7 +160,7 @@ maxpool_layer make_maxpool_layer(int batch, int h, int w, int c, int size, int s
 
     if (l.antialiasing) {
         printf("AA:  ");
-        l.input_layer = (layer*)calloc(1, sizeof(layer));
+        l.input_layer = (layer*)xcalloc(1, sizeof(layer), __FILE__, __LINE__);
         int blur_size = 3;
         int blur_pad = blur_size / 2;
         if (l.antialiasing == 2) {
@@ -217,10 +217,10 @@ void resize_maxpool_layer(maxpool_layer *l, int w, int h)
     int output_size = l->outputs * l->batch;
 
     if (l->train) {
-        if (!l->avgpool) l->indexes = (int*)xrealloc(l->indexes, output_size * sizeof(int));
-        l->delta = (float*)xrealloc(l->delta, output_size * sizeof(float));
+        if (!l->avgpool) l->indexes = (int*)xrealloc(l->indexes, output_size * sizeof(int), __FILE__, __LINE__);
+        l->delta = (float*)xrealloc(l->delta, output_size * sizeof(float), __FILE__, __LINE__);
     }
-    l->output = (float*)xrealloc(l->output, output_size * sizeof(float));
+    l->output = (float*)xrealloc(l->output, output_size * sizeof(float), __FILE__, __LINE__);
 
 #ifdef GPU
     CHECK_CUDA(cudaFree(l->output_gpu));

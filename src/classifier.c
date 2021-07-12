@@ -17,7 +17,7 @@ float validate_classifier_single(char *datacfg, char *filename, char *weightfile
 
 float *get_regression_values(char **labels, int n)
 {
-    float* v = (float*)xcalloc(n, sizeof(float));
+    float* v = (float*)xcalloc(n, sizeof(float), __FILE__, __LINE__);
     int i;
     for(i = 0; i < n; ++i){
         char *p = strchr(labels[i], ' ');
@@ -36,7 +36,7 @@ void train_classifier(char *datacfg, char *cfgfile, char *weightfile, int *gpus,
     char *base = basecfg(cfgfile);
     printf("%s\n", base);
     printf("%d\n", ngpus);
-    network* nets = (network*)xcalloc(ngpus, sizeof(network));
+    network* nets = (network*)xcalloc(ngpus, sizeof(network), __FILE__, __LINE__);
 
     srand(time(0));
     int seed = rand();
@@ -479,7 +479,7 @@ void validate_classifier_10(char *datacfg, char *filename, char *weightfile)
 
     float avg_acc = 0;
     float avg_topk = 0;
-    int* indexes = (int*)xcalloc(topk, sizeof(int));
+    int* indexes = (int*)xcalloc(topk, sizeof(int), __FILE__, __LINE__);
 
     for(i = 0; i < m; ++i){
         int class_id = -1;
@@ -506,7 +506,7 @@ void validate_classifier_10(char *datacfg, char *filename, char *weightfile)
         images[7] = crop_image(im, 0, 0, w, h);
         images[8] = crop_image(im, -shift, shift, w, h);
         images[9] = crop_image(im, shift, shift, w, h);
-        float* pred = (float*)xcalloc(classes, sizeof(float));
+        float* pred = (float*)xcalloc(classes, sizeof(float), __FILE__, __LINE__);
         for(j = 0; j < 10; ++j){
             float *p = network_predict(net, images[j].data);
             if(net.hierarchy) hierarchy_predictions(p, net.outputs, net.hierarchy, 1);
@@ -553,7 +553,7 @@ void validate_classifier_full(char *datacfg, char *filename, char *weightfile)
 
     float avg_acc = 0;
     float avg_topk = 0;
-    int* indexes = (int*)xcalloc(topk, sizeof(int));
+    int* indexes = (int*)xcalloc(topk, sizeof(int), __FILE__, __LINE__);
 
     int size = net.w;
     for(i = 0; i < m; ++i){
@@ -631,7 +631,7 @@ float validate_classifier_single(char *datacfg, char *filename, char *weightfile
 
     float avg_acc = 0;
     float avg_topk = 0;
-    int* indexes = (int*)xcalloc(topk, sizeof(int));
+    int* indexes = (int*)xcalloc(topk, sizeof(int), __FILE__, __LINE__);
 
     for(i = 0; i < m; ++i){
         int class_id = -1;
@@ -702,7 +702,7 @@ void validate_classifier_multi(char *datacfg, char *filename, char *weightfile)
 
     float avg_acc = 0;
     float avg_topk = 0;
-    int* indexes = (int*)xcalloc(topk, sizeof(int));
+    int* indexes = (int*)xcalloc(topk, sizeof(int), __FILE__, __LINE__);
 
     for(i = 0; i < m; ++i){
         int class_id = -1;
@@ -713,7 +713,7 @@ void validate_classifier_multi(char *datacfg, char *filename, char *weightfile)
                 break;
             }
         }
-        float* pred = (float*)xcalloc(classes, sizeof(float));
+        float* pred = (float*)xcalloc(classes, sizeof(float), __FILE__, __LINE__);
         image im = load_image_color(paths[i], 0, 0);
         for(j = 0; j < nscales; ++j){
             image r = resize_min(im, scales[j]);
@@ -758,7 +758,7 @@ void try_classifier(char *datacfg, char *cfgfile, char *weightfile, char *filena
 
     char **names = get_labels(name_list);
     clock_t time;
-    int* indexes = (int*)xcalloc(top, sizeof(int));
+    int* indexes = (int*)xcalloc(top, sizeof(int), __FILE__, __LINE__);
     char buff[256];
     char *input = buff;
     while(1){
@@ -853,7 +853,7 @@ void predict_classifier(char *datacfg, char *cfgfile, char *weightfile, char *fi
     int i = 0;
     char **names = get_labels(name_list);
     clock_t time;
-    int* indexes = (int*)xcalloc(top, sizeof(int));
+    int* indexes = (int*)xcalloc(top, sizeof(int), __FILE__, __LINE__);
     char buff[256];
     char *input = buff;
     //int size = net.w;
@@ -1049,9 +1049,9 @@ void threat_classifier(char *datacfg, char *cfgfile, char *weightfile, int cam_i
     char *name_list = option_find_str(options, "names", 0);
     char **names = get_labels(name_list);
 
-    int* indexes = (int*)xcalloc(top, sizeof(int));
+    int* indexes = (int*)xcalloc(top, sizeof(int), __FILE__, __LINE__);
 
-    if(!cap) error("Couldn't connect to webcam.\n");
+    if(!cap) error("Couldn't connect to webcam.", __FILE__, __LINE__);
     create_window_cv("Threat", 0, 512, 512);
     float fps = 0;
     int i;
@@ -1272,9 +1272,9 @@ void demo_classifier(char *datacfg, char *cfgfile, char *weightfile, int cam_ind
     char *name_list = option_find_str(options, "names", 0);
     char **names = get_labels(name_list);
 
-    int* indexes = (int*)xcalloc(top, sizeof(int));
+    int* indexes = (int*)xcalloc(top, sizeof(int), __FILE__, __LINE__);
 
-    if(!cap) error("Couldn't connect to webcam.\n");
+    if(!cap) error("Couldn't connect to webcam.", __FILE__, __LINE__);
     if (!benchmark) create_window_cv("Classifier", 0, 512, 512);
     float fps = 0;
     int i;
@@ -1371,7 +1371,7 @@ void run_classifier(int argc, char **argv)
         for(i = 0; i < len; ++i){
             if (gpu_list[i] == ',') ++ngpus;
         }
-        gpus = (int*)xcalloc(ngpus, sizeof(int));
+        gpus = (int*)xcalloc(ngpus, sizeof(int), __FILE__, __LINE__);
         for(i = 0; i < ngpus; ++i){
             gpus[i] = atoi(gpu_list);
             gpu_list = strchr(gpu_list, ',')+1;
