@@ -32,6 +32,10 @@ def parser():
                         help="path to data file")
     parser.add_argument("--thresh", type=float, default=.25,
                         help="remove detections with lower confidence")
+    parser.add_argument("--output_folder", default="/data/output",
+                        help="output to save detection results drawn on images")
+    parser.add_argument("--cut_folder", default=None,
+                        help="output to save detection results drawn on images")
     return parser.parse_args()
 
 
@@ -97,23 +101,61 @@ def prepare_batch(images, network, channels=3):
     return darknet.IMAGE(width, height, channels, darknet_images)
 
 
-def image_detection(image_path, network, class_names, class_colors, thresh):
+def image_detection(image_path, network, class_names, class_colors, thresh, output_folder, cut_folder):
     # Darknet doesn't accept numpy images.
     # Create one with image we reuse for each detect
+    
+    imgName = image_path.split("/")[-1]
+   
     width = darknet.network_width(network)
     height = darknet.network_height(network)
     darknet_image = darknet.make_image(width, height, 3)
 
     image = cv2.imread(image_path)
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    image_h, image_w, __ = image.shape 
+  #  print("IM W: ", image_w, "IM_H:", image_h)
     image_resized = cv2.resize(image_rgb, (width, height),
                                interpolation=cv2.INTER_LINEAR)
 
     darknet.copy_image_from_bytes(darknet_image, image_resized.tobytes())
     detections = darknet.detect_image(network, class_names, darknet_image, thresh=thresh)
-    darknet.free_image(darknet_image)
-    image = darknet.draw_boxes(detections, image_resized, class_colors)
-    return cv2.cvtColor(image, cv2.COLOR_BGR2RGB), detections
+   
+    image_drawn = darknet.draw_boxes(detections, image_resized, class_colors)
+    if(output_folder):
+        if not os.path.exists(output_folder):
+                os.mkdir(output_folder)
+        cv2.imwrite(output_folder+imgName, image_drawn) # output images with detected boxes drawn
+    if (cut_folder):
+        if not os.path.exists(cut_folder):
+                os.mkdir(cut_folder)
+        count = 0
+        for name in class_names:
+            if not os.path.exists(cut_folder+name):
+                os.mkdir(cut_folder+name)
+        for label, confidence, bbox in detections:
+            x, y, w, h = convert2relative(image_resized, bbox)
+      #      print("x", x, "y", y, "w", w, "h", h)
+            left = int ((x - w /2.)*image_w)
+            right = int((x + w /2.)*image_w)
+            top = int( (y - h /2.) * image_h)
+            bottom = int((y + h /2.)*image_h)
+            
+     #       print("left", left, "right", right, "top",top, "bottom", bottom)
+            
+            if (left < 0): left = 0
+            if (right > image_w - 1): right = image_w - 1
+            if (top < 0): top = 0
+            if (bottom > image_h - 1): bottom = image_h - 1
+            
+            
+            image_cropped = image[top:bottom, left:right]
+            outputName = cut_folder + label + "/" + str(count) + imgName
+            cv2.imwrite(outputName, image_cropped)
+            count+=1
+            
+    darknet.free_image(darknet_image)     
+    return cv2.cvtColor(image_drawn, cv2.COLOR_BGR2RGB), detections
 
 
 def batch_detection(network, images, class_names, class_colors,
@@ -215,7 +257,7 @@ def main():
             image_name = input("Enter Image Path: ")
         prev_time = time.time()
         image, detections = image_detection(
-            image_name, network, class_names, class_colors, args.thresh
+            image_name, network, class_names, class_colors, args.thresh, args.output_folder, args.cut_folder
             )
         if args.save_labels:
             save_annotations(image_name, image, detections, class_names)
