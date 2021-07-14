@@ -222,6 +222,10 @@ def main():
         darknet.print_detections(detections, args.ext_output)
         fps = int(1/(time.time() - prev_time))
         print("FPS: {}".format(fps))
+        
+        #################
+        #print(darknet.draw_boxes(detections, image_resized, class_colors))
+        print('Found {} boxes for {}'.format(len(out_boxes), image_file))
         if not args.dont_show:
             cv2.imshow('Inference', image)
             if cv2.waitKey() & 0xFF == ord('q'):
