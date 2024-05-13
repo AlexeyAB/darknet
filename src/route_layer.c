@@ -35,8 +35,8 @@ route_layer make_route_layer(int batch, int n, int *input_layers, int *input_siz
     l.forward_gpu = forward_route_layer_gpu;
     l.backward_gpu = backward_route_layer_gpu;
 
-    l.delta_gpu =  cuda_make_array(l.delta, outputs*batch);
-    l.output_gpu = cuda_make_array(l.output, outputs*batch);
+    l.delta_gpu =  cuda_make_array_init2zero(outputs*batch);
+    l.output_gpu = cuda_make_array_init2zero(outputs*batch);
     #endif
     return l;
 }
