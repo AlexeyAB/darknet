@@ -1,12 +1,6 @@
-'''
-Created on Feb 20, 2017
-
-@author: jumabek
-'''
 from os import listdir
 from os.path import isfile, join
 import argparse
-#import cv2
 import numpy as np
 import sys
 import os
@@ -14,12 +8,8 @@ import shutil
 import random 
 import math
 
-width_in_cfg_file = 416.
-height_in_cfg_file = 416.
-
 def IOU(x,centroids):
     similarities = []
-    k = len(centroids)
     for centroid in centroids:
         c_w,c_h = centroid
         w,h = x
@@ -42,15 +32,15 @@ def avg_IOU(X,centroids):
         sum+= max(IOU(X[i],centroids)) 
     return sum/n
 
-def write_anchors_to_file(centroids,X,anchor_file):
+def write_anchors_to_file(img_width,img_height,centroids,X,anchor_file):
     f = open(anchor_file,'w')
     
     anchors = centroids.copy()
     print(anchors.shape)
 
     for i in range(anchors.shape[0]):
-        anchors[i][0]*=width_in_cfg_file/32.
-        anchors[i][1]*=height_in_cfg_file/32.
+        anchors[i][0]*=img_width/32.
+        anchors[i][1]*=img_height/32.
          
 
     widths = anchors[:,0]
@@ -67,10 +57,9 @@ def write_anchors_to_file(centroids,X,anchor_file):
     f.write('%f\n'%(avg_IOU(X,centroids)))
     print()
 
-def kmeans(X,centroids,eps,anchor_file):
+def kmeans(X,centroids,eps,anchor_file,img_width,img_height):
     
     N = X.shape[0]
-    iterations = 0
     k,dim = centroids.shape
     prev_assignments = np.ones(N)*(-1)    
     iter = 0
@@ -91,7 +80,7 @@ def kmeans(X,centroids,eps,anchor_file):
         
         if (assignments == prev_assignments).all() :
             print("Centroids = ",centroids)
-            write_anchors_to_file(centroids,X,anchor_file)
+            write_anchors_to_file(img_width,img_height,centroids,X,anchor_file)
             return
 
         #calculate new centroids
@@ -111,7 +100,11 @@ def main(argv):
     parser.add_argument('-output_dir', default = 'generated_anchors/anchors', type = str, 
                         help='Output anchor directory\n' )  
     parser.add_argument('-num_clusters', default = 0, type = int, 
-                        help='number of clusters\n' )  
+                        help='number of clusters\n' )
+    parser.add_argument('-img_width', default = 416, type = int, 
+                        help='width in cfg file\n' )
+    parser.add_argument('-img_height', default = 416, type = int, 
+                        help='height in cfg file\n' )
 
    
     args = parser.parse_args()
@@ -125,7 +118,6 @@ def main(argv):
     
     annotation_dims = []
 
-    size = np.zeros((1,1,3))
     for line in lines:
                     
         #line = line.replace('images','labels')
@@ -152,13 +144,13 @@ def main(argv):
 
             indices = [ random.randrange(annotation_dims.shape[0]) for i in range(num_clusters)]
             centroids = annotation_dims[indices]
-            kmeans(annotation_dims,centroids,eps,anchor_file)
+            kmeans(annotation_dims,centroids,eps,anchor_file, args.img_width, args.img_height)
             print('centroids.shape', centroids.shape)
     else:
         anchor_file = join( args.output_dir,'anchors%d.txt'%(args.num_clusters))
         indices = [ random.randrange(annotation_dims.shape[0]) for i in range(args.num_clusters)]
         centroids = annotation_dims[indices]
-        kmeans(annotation_dims,centroids,eps,anchor_file)
+        kmeans(annotation_dims,centroids,eps,anchor_file, args.img_width, args.img_height)
         print('centroids.shape', centroids.shape)
 
 if __name__=="__main__":
