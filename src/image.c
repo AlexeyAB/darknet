@@ -11,6 +11,7 @@
 #endif
 #include <math.h>
 
+#define STBI_ASSERT(x)
 #ifndef STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -19,6 +20,11 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image_write.h>
 #endif
+
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+#include "jWrite.h"
 
 float colors[6][3] = { {1,0,1}, {0,0,1},{0,1,1},{0,1,0},{1,1,0},{1,0,0} };
 
@@ -35,7 +41,7 @@ float get_color(int c, int x, int max)
 
 static float get_pixel(image m, int x, int y, int c)
 {
-    assert(x < m.w && y < m.h && c < m.c);
+    STBI_ASSERT(x < m.w && y < m.h && c < m.c);
     return m.data[c*m.h*m.w + y*m.w + x];
 }
 static float get_pixel_extend(image m, int x, int y, int c)
@@ -53,12 +59,12 @@ static float get_pixel_extend(image m, int x, int y, int c)
 static void set_pixel(image m, int x, int y, int c, float val)
 {
     if (x < 0 || y < 0 || c < 0 || x >= m.w || y >= m.h || c >= m.c) return;
-    assert(x < m.w && y < m.h && c < m.c);
+    STBI_ASSERT(x < m.w && y < m.h && c < m.c);
     m.data[c*m.h*m.w + y*m.w + x] = val;
 }
 static void add_pixel(image m, int x, int y, int c, float val)
 {
-    assert(x < m.w && y < m.h && c < m.c);
+    STBI_ASSERT(x < m.w && y < m.h && c < m.c);
     m.data[c*m.h*m.w + y*m.w + x] += val;
 }
 
@@ -472,6 +478,59 @@ void draw_detections_v3(image im, detection *dets, int num, float thresh, char *
     free(selected_detections);
 }
 
+void single_json(image im, detection *dets, int num, float thresh, char **names, int classes, char *input, FILE *output)
+{
+            struct jWriteControl pic;
+            char buffer[4096];
+
+            jwOpen(&pic, buffer, 4096, JW_OBJECT, JW_COMPACT);
+            jwObj_string(&pic, "fileName", input);
+            jwObj_array(&pic, "predictions");
+            fwrite(buffer, strlen(buffer), 1, output);
+            int selected_detections_num;
+            detection_with_class* selected_detections = get_actual_detections(dets, num, thresh, &selected_detections_num, names);
+
+            int first = 1;
+            qsort(selected_detections, selected_detections_num, sizeof(*selected_detections), compare_by_lefts);
+            int i;
+            for (i = 0; i < selected_detections_num; ++i) {
+                    if(first == 0){
+                           fprintf(output, ",");
+                    }
+                    struct jWriteControl prd;
+                    char predbuffer[4096];
+                    jwOpen(&prd, predbuffer, 4096, JW_OBJECT, JW_COMPACT); //open predictions object
+                    box bjson = selected_detections[i].det.bbox;
+                    int leftxjson = (bjson.x - bjson.w / 2.)*im.w;
+                    int widthjson = bjson.w*im.w;
+                    int topyjson = (bjson.y - bjson.h / 2.)*im.h;
+                    int heighthjson = bjson.h*im.h;
+                    jwObj_int(&prd, "left_x", leftxjson);
+                    jwObj_int(&prd, "top_y", topyjson);
+                    jwObj_int(&prd, "width", widthjson);
+                    jwObj_int(&prd, "height", heighthjson);
+                    //labels
+                    jwObj_array(&prd, "labels"); //labels array placeholder
+
+                    int j;
+                    for (j = 0; j < classes; ++j) {
+                        if (selected_detections[i].det.prob[j] > thresh) {
+                            jwArr_object(&prd);
+                            jwObj_string(&prd, "label", names[j]); // add object class: predicted class
+                            jwObj_double(&prd, "score", selected_detections[i].det.prob[j] * 100); // prob: probability
+                            jwEnd(&prd); //end label object
+                        }
+                    }
+                    jwEnd(&prd); //end labels array
+                    jwClose(&prd); //end prediction object
+                    fwrite(predbuffer, strlen(predbuffer), 1, output);
+                    first = 0;
+            }
+            fprintf(output, "]");
+            fprintf(output, "}");
+            free(selected_detections);
+}
+
 void draw_detections(image im, int num, float thresh, box *boxes, float **probs, char **names, image **alphabet, int classes)
 {
     int i;
@@ -535,7 +594,7 @@ void draw_detections(image im, int num, float thresh, box *boxes, float **probs,
 
 void transpose_image(image im)
 {
-    assert(im.w == im.h);
+    STBI_ASSERT(im.w == im.h);
     int n, m;
     int c;
     for(c = 0; c < im.c; ++c){
@@ -551,7 +610,7 @@ void transpose_image(image im)
 
 void rotate_image_cw(image im, int times)
 {
-    assert(im.w == im.h);
+    STBI_ASSERT(im.w == im.h);
     times = (times + 400) % 4;
     int i, x, y, c;
     int n = im.w;
@@ -1099,7 +1158,7 @@ float three_way_min(float a, float b, float c)
 // http://www.cs.rit.edu/~ncs/color/t_convert.html
 void rgb_to_hsv(image im)
 {
-    assert(im.c == 3);
+    STBI_ASSERT(im.c == 3);
     int i, j;
     float r, g, b;
     float h, s, v;
@@ -1136,7 +1195,7 @@ void rgb_to_hsv(image im)
 
 void hsv_to_rgb(image im)
 {
-    assert(im.c == 3);
+    STBI_ASSERT(im.c == 3);
     int i, j;
     float r, g, b;
     float h, s, v;
@@ -1177,7 +1236,7 @@ void hsv_to_rgb(image im)
 
 image grayscale_image(image im)
 {
-    assert(im.c == 3);
+    STBI_ASSERT(im.c == 3);
     int i, j, k;
     image gray = make_image(im.w, im.h, 1);
     float scale[] = {0.587, 0.299, 0.114};
@@ -1203,7 +1262,7 @@ image threshold_image(image im, float thresh)
 
 image blend_image(image fore, image back, float alpha)
 {
-    assert(fore.w == back.w && fore.h == back.h && fore.c == back.c);
+    STBI_ASSERT(fore.w == back.w && fore.h == back.h && fore.c == back.c);
     image blend = make_image(fore.w, fore.h, fore.c);
     int i, j, k;
     for(k = 0; k < fore.c; ++k){
