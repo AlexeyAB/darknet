@@ -177,6 +177,51 @@ LIB_API Detector::Detector(std::string cfg_filename, std::string weight_filename
 #endif
 }
 
+// Detector initialized by using cfg and weights in an array instead of file
+LIB_API Detector::Detector(const std::string& cfg_string, std::uint8_t const *weights, size_t size, int gpu_id ) : cur_gpu_id(gpu_id)
+{
+    wait_stream = 0;
+#ifdef GPU
+    int old_gpu_index;
+    check_cuda( cudaGetDevice(&old_gpu_index) );
+#endif
+
+    detector_gpu_ptr = std::make_shared<detector_gpu_t>();
+    detector_gpu_t &detector_gpu = *static_cast<detector_gpu_t *>(detector_gpu_ptr.get());
+
+#ifdef GPU
+    //check_cuda( cudaSetDevice(cur_gpu_id) );
+    cuda_set_device(cur_gpu_id);
+    printf(" Used GPU %d \n", cur_gpu_id);
+#endif
+    network &net = detector_gpu.net;
+    net.gpu_index = cur_gpu_id;
+    //gpu_index = i;
+
+    net = parse_network_cfg_custom_mem( cfg_string.c_str(), 1, 1);
+    if(size > 0)
+    {
+        load_weights_mem(&net, (const char*) weights, size);
+    }
+    set_batch_network(&net, 1);
+    net.gpu_index = cur_gpu_id;
+    fuse_conv_batchnorm(net);
+
+    layer l = net.layers[net.n - 1];
+    int j;
+
+    detector_gpu.avg = (float *)calloc(l.outputs, sizeof(float));
+    for (j = 0; j < NFRAMES; ++j) detector_gpu.predictions[j] = (float*)calloc(l.outputs, sizeof(float));
+    for (j = 0; j < NFRAMES; ++j) detector_gpu.images[j] = make_image(1, 1, 3);
+
+    detector_gpu.track_id = (unsigned int *)calloc(l.classes, sizeof(unsigned int));
+    for (j = 0; j < l.classes; ++j) detector_gpu.track_id[j] = 1;
+
+#ifdef GPU
+    check_cuda( cudaSetDevice(old_gpu_index) );
+#endif
+}
+
 
 LIB_API Detector::~Detector()
 {
