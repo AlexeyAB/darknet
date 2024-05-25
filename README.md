@@ -691,7 +691,22 @@ Example of custom object detection: `darknet.exe detector test data/obj.data yol
 
 - increase network resolution in your `.cfg`-file (`height=608`, `width=608` or any value multiple of 32) - it will increase precision
 
-- check that each object that you want to detect is mandatory labeled in your dataset - no one object in your data set should not be without label. In the most training issues - there are wrong labels in your dataset (got labels by using some conversion script, marked with a third-party tool, ...). Always check your dataset by using: https://github.com/AlexeyAB/Yolo_mark
+* check that each object that you want to detect is mandatory labeled in your dataset - no object in your data set should be without label. In the most training issues - there are wrong labels in your dataset (got labels by using some conversion script, marked with a third-party tool, ...). Always check your dataset by using: https://github.com/AlexeyAB/Yolo_mark
+  
+* when using a custom and imbalanced dataset, set `counters_per_class`  parameter in your [`yolo`] or [`Gaussian_yolo`] layer, it defines the number of objects for each class, and a multiplier will be calculated for each class, which will then be used to scale deltas and balance the network accuracy for each class.
+  
+  I.e. you have 3 classes:
+  * class-0 - 100 objects in training dataset
+  * class-1 - 250 objects in training dataset
+  * class-2 - 800 objects in training dataset
+
+  Set in [`yolo`]/[`Gaussian_yolo`]:
+  counters_per_class=100,250,800
+
+  A delta multiplier will be calculated for each class: multiplier = max_val / cur_val
+  l.classes_multipliers = 8.0, 3.2, 1.0
+
+  So, each delta for class-0 will be multiplied by 8.0 in order to balance the network.
 
 - my Loss is very high and mAP is very low, is training wrong? Run training with `-show_imgs` flag at the end of training command, do you see correct bounded boxes of objects (in windows or in files `aug_...jpg`)? If no - your training dataset is wrong.
 
