@@ -52,7 +52,7 @@ layer make_shortcut_layer(int batch, int n, int *input_layers, int* input_sizes,
 
     if (l.nweights > 0) {
         l.weights = (float*)calloc(l.nweights, sizeof(float));
-        float scale = sqrt(2. / l.nweights);
+        // float scale = sqrt(2. / l.nweights);
         for (i = 0; i < l.nweights; ++i) l.weights[i] = 1;// +0.01*rand_uniform(-1, 1);// scale*rand_uniform(-1, 1);   // rand_normal();
 
         if (train) l.weight_updates = (float*)calloc(l.nweights, sizeof(float));

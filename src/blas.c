@@ -204,7 +204,7 @@ void backward_shortcut_multilayer_cpu(int size, int src_outputs, int batch, int 
             int add_outputs = outputs_of_layers[i];
             if (src_i < add_outputs) {
                 int add_index = add_outputs*src_b + src_i;
-                int out_index = id;
+                // int out_index = id;
 
                 float *layer_delta = layers_delta[i];
                 if (weights) {
@@ -506,7 +506,7 @@ void constrain_cpu(int size, float ALPHA, float *X)
     }
 }
 
-void fix_nan_and_inf_cpu(float *input, size_t size)
+void fix_nan_and_inf_cpu(float *input, int size)
 {
     int i;
     for (i = 0; i < size; ++i) {
@@ -530,7 +530,7 @@ void get_embedding(float *src, int src_w, int src_h, int src_c, int embedding_si
 
 
 // Euclidean_norm
-float math_vector_length(float *A, unsigned int feature_size)
+float math_vector_length(float *A, int feature_size)
 {
     float sum = 0;
     int i;
@@ -542,7 +542,7 @@ float math_vector_length(float *A, unsigned int feature_size)
     return vector_length;
 }
 
-float cosine_similarity(float *A, float *B, unsigned int feature_size)
+float cosine_similarity(float *A, float *B, int feature_size)
 {
     float mul = 0.0, d_a = 0.0, d_b = 0.0;
 
@@ -561,9 +561,9 @@ float cosine_similarity(float *A, float *B, unsigned int feature_size)
     return similarity;
 }
 
-int get_sim_P_index(size_t i, size_t j, contrastive_params *contrast_p, int contrast_p_size)
+int get_sim_P_index(int i, int j, contrastive_params *contrast_p, int contrast_p_size)
 {
-    size_t z;
+    int z;
     for (z = 0; z < contrast_p_size; ++z) {
         if (contrast_p[z].i == i && contrast_p[z].j == j) break;
     }
@@ -574,9 +574,9 @@ int get_sim_P_index(size_t i, size_t j, contrastive_params *contrast_p, int cont
     return z;   // found
 }
 
-int check_sim(size_t i, size_t j, contrastive_params *contrast_p, int contrast_p_size)
+int check_sim(int i, int j, contrastive_params *contrast_p, int contrast_p_size)
 {
-    size_t z;
+    int z;
     for (z = 0; z < contrast_p_size; ++z) {
         if (contrast_p[z].i == i && contrast_p[z].j == j) break;
     }
@@ -587,28 +587,28 @@ int check_sim(size_t i, size_t j, contrastive_params *contrast_p, int contrast_p
     return 1;   // found
 }
 
-float find_sim(size_t i, size_t j, contrastive_params *contrast_p, int contrast_p_size)
+float find_sim(int i, int j, contrastive_params *contrast_p, int contrast_p_size)
 {
-    size_t z;
+    int z;
     for (z = 0; z < contrast_p_size; ++z) {
         if (contrast_p[z].i == i && contrast_p[z].j == j) break;
     }
     if (z == contrast_p_size) {
-        printf(" Error: find_sim(): sim isn't found: i = %zu, j = %zu, z = %zu \n", i, j, z);
+        printf(" Error: find_sim(): sim isn't found: i = %d, j = %d, z = %d \n", i, j, z);
         error("Error!", DARKNET_LOC);
     }
 
     return contrast_p[z].sim;
 }
 
-float find_P_constrastive(size_t i, size_t j, contrastive_params *contrast_p, int contrast_p_size)
+float find_P_constrastive(int i, int j, contrastive_params *contrast_p, int contrast_p_size)
 {
-    size_t z;
+    int z;
     for (z = 0; z < contrast_p_size; ++z) {
         if (contrast_p[z].i == i && contrast_p[z].j == j) break;
     }
     if (z == contrast_p_size) {
-        printf(" Error: find_P_constrastive(): P isn't found: i = %zu, j = %zu, z = %zu \n", i, j, z);
+        printf(" Error: find_P_constrastive(): P isn't found: i = %d, j = %d, z = %d \n", i, j, z);
         error("Error!", DARKNET_LOC);
     }
 
@@ -616,11 +616,11 @@ float find_P_constrastive(size_t i, size_t j, contrastive_params *contrast_p, in
 }
 
 // num_of_samples = 2 * loaded_images = mini_batch_size
-float P_constrastive_f_det(size_t il, int *labels, float **z, unsigned int feature_size, float temperature, contrastive_params *contrast_p, int contrast_p_size)
+float P_constrastive_f_det(int il, int *labels, float **z, int feature_size, float temperature, contrastive_params *contrast_p, int contrast_p_size)
 {
     const float sim = contrast_p[il].sim;
-    const size_t i = contrast_p[il].i;
-    const size_t j = contrast_p[il].j;
+    const int i = contrast_p[il].i;
+    const int j = contrast_p[il].j;
 
     const float numerator = expf(sim / temperature);
 
@@ -645,10 +645,10 @@ float P_constrastive_f_det(size_t il, int *labels, float **z, unsigned int featu
 }
 
 // num_of_samples = 2 * loaded_images = mini_batch_size
-float P_constrastive_f(size_t i, size_t l, int *labels, float **z, unsigned int feature_size, float temperature, contrastive_params *contrast_p, int contrast_p_size)
+float P_constrastive_f(int i, int l, int *labels, float **z, int feature_size, float temperature, contrastive_params *contrast_p, int contrast_p_size)
 {
     if (i == l) {
-        fprintf(stderr, " Error: in P_constrastive must be i != l, while i = %zu, l = %zu \n", i, l);
+        fprintf(stderr, " Error: in P_constrastive must be i != l, while i = %d, l = %d \n", i, l);
         error("Error!", DARKNET_LOC);
     }
 
@@ -675,10 +675,10 @@ float P_constrastive_f(size_t i, size_t l, int *labels, float **z, unsigned int 
     return result;
 }
 
-void grad_contrastive_loss_positive_f(size_t i, int *class_ids, int *labels, size_t num_of_samples, float **z, unsigned int feature_size, float temperature, float *delta, int wh, contrastive_params *contrast_p, int contrast_p_size)
+void grad_contrastive_loss_positive_f(int i, int *class_ids, int *labels, int num_of_samples, float **z, int feature_size, float temperature, float *delta, int wh, contrastive_params *contrast_p, int contrast_p_size)
 {
     const float vec_len = math_vector_length(z[i], feature_size);
-    size_t j;
+    int j;
     float N = 0;
     for (j = 0; j < num_of_samples; ++j) {
         if (labels[i] == labels[j] && labels[i] >= 0) N++;
@@ -720,10 +720,10 @@ void grad_contrastive_loss_positive_f(size_t i, int *class_ids, int *labels, siz
     }
 }
 
-void grad_contrastive_loss_negative_f(size_t i, int *class_ids, int *labels, size_t num_of_samples, float **z, unsigned int feature_size, float temperature, float *delta, int wh, contrastive_params *contrast_p, int contrast_p_size, int neg_max)
+void grad_contrastive_loss_negative_f(int i, int *class_ids, int *labels, int num_of_samples, float **z, int feature_size, float temperature, float *delta, int wh, contrastive_params *contrast_p, int contrast_p_size, int neg_max)
 {
     const float vec_len = math_vector_length(z[i], feature_size);
-    size_t j;
+    int j;
     float N = 0;
     for (j = 0; j < num_of_samples; ++j) {
         if (labels[i] == labels[j] && labels[i] >= 0) N++;
@@ -741,7 +741,7 @@ void grad_contrastive_loss_negative_f(size_t i, int *class_ids, int *labels, siz
         //if (i != j && (i/2) == (j/2)) {
         if (labels[i] >= 0 && labels[i] == labels[j] && i != j) {
 
-            size_t k;
+            int k;
             for (k = 0; k < num_of_samples; ++k) {
                 //if (k != i && k != j && labels[k] != labels[i]) {
                 if (k != i && k != j && labels[k] != labels[i] && class_ids[j] == class_ids[k]) {
@@ -777,10 +777,10 @@ void grad_contrastive_loss_negative_f(size_t i, int *class_ids, int *labels, siz
 
 
 // num_of_samples = 2 * loaded_images = mini_batch_size
-float P_constrastive(size_t i, size_t l, int *labels, size_t num_of_samples, float **z, unsigned int feature_size, float temperature, float *cos_sim, float *exp_cos_sim)
+float P_constrastive(int i, int l, int *labels, int num_of_samples, float **z, int feature_size, float temperature, float *cos_sim, float *exp_cos_sim)
 {
     if (i == l) {
-        fprintf(stderr, " Error: in P_constrastive must be i != l, while i = %zu, l = %zu \n", i, l);
+        fprintf(stderr, " Error: in P_constrastive must be i != l, while i = %d, l = %d \n", i, l);
         error("Error!", DARKNET_LOC);
     }
 
@@ -808,10 +808,10 @@ float P_constrastive(size_t i, size_t l, int *labels, size_t num_of_samples, flo
 // z[feature_size][num_of_samples] - array of arrays with contrastive features (output of conv-layer, f.e. 128 floats for each sample)
 // delta[feature_size] - array with deltas for backpropagation
 // temperature - scalar temperature param (temperature > 0), f.e. temperature = 0.07: Supervised Contrastive Learning
-void grad_contrastive_loss_positive(size_t i, int *labels, size_t num_of_samples, float **z, unsigned int feature_size, float temperature, float *cos_sim, float *p_constrastive, float *delta, int wh)
+void grad_contrastive_loss_positive(int i, int *labels, int num_of_samples, float **z, int feature_size, float temperature, float *cos_sim, float *p_constrastive, float *delta, int wh)
 {
     const float vec_len = math_vector_length(z[i], feature_size);
-    size_t j;
+    int j;
     float N = 0;
     for (j = 0; j < num_of_samples; ++j) {
         if (labels[i] == labels[j]) N++;
@@ -848,10 +848,10 @@ void grad_contrastive_loss_positive(size_t i, int *labels, size_t num_of_samples
 // z[feature_size][num_of_samples] - array of arrays with contrastive features (output of conv-layer, f.e. 128 floats for each sample)
 // delta[feature_size] - array with deltas for backpropagation
 // temperature - scalar temperature param (temperature > 0), f.e. temperature = 0.07: Supervised Contrastive Learning
-void grad_contrastive_loss_negative(size_t i, int *labels, size_t num_of_samples, float **z, unsigned int feature_size, float temperature, float *cos_sim, float *p_constrastive, float *delta, int wh)
+void grad_contrastive_loss_negative(int i, int *labels, int num_of_samples, float **z, int feature_size, float temperature, float *cos_sim, float *p_constrastive, float *delta, int wh)
 {
     const float vec_len = math_vector_length(z[i], feature_size);
-    size_t j;
+    int j;
     float N = 0;
     for (j = 0; j < num_of_samples; ++j) {
         if (labels[i] == labels[j]) N++;
@@ -866,7 +866,7 @@ void grad_contrastive_loss_negative(size_t i, int *labels, size_t num_of_samples
         //if (i != j && (i/2) == (j/2)) {
         if (i != j && labels[i] == labels[j]) {
 
-            size_t k;
+            int k;
             for (k = 0; k < num_of_samples; ++k) {
                 //if (k != i && k != j && labels[k] != labels[i]) {
                 if (k != i && k != j && labels[k] >= 0) {

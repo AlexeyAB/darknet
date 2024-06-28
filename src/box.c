@@ -152,6 +152,7 @@ float box_iou_kind(box a, box b, IOU_LOSS iou_kind)
 {
     //IOU, GIOU, MSE, DIOU, CIOU
     switch(iou_kind) {
+	case MSE: assert(0);
         case IOU: return box_iou(a, b);
         case GIOU: return box_giou(a, b);
         case DIOU: return box_diou(a, b);
@@ -893,9 +894,9 @@ void diounms_sort(detection *dets, int total, int classes, float thresh, NMS_KIN
                 box b = dets[j].bbox;
                 if (box_iou(a, b) > thresh && nms_kind == CORNERS_NMS)
                 {
-                    float sum_prob = pow(dets[i].prob[k], 2) + pow(dets[j].prob[k], 2);
-                    float alpha_prob = pow(dets[i].prob[k], 2) / sum_prob;
-                    float beta_prob = pow(dets[j].prob[k], 2) / sum_prob;
+                    //float sum_prob = pow(dets[i].prob[k], 2) + pow(dets[j].prob[k], 2);
+                    // float alpha_prob = pow(dets[i].prob[k], 2) / sum_prob;
+                    //float beta_prob = pow(dets[j].prob[k], 2) / sum_prob;
                     //dets[i].bbox.x = (dets[i].bbox.x*alpha_prob + dets[j].bbox.x*beta_prob);
                     //dets[i].bbox.y = (dets[i].bbox.y*alpha_prob + dets[j].bbox.y*beta_prob);
                     //dets[i].bbox.w = (dets[i].bbox.w*alpha_prob + dets[j].bbox.w*beta_prob);

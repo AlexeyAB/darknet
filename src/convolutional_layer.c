@@ -887,8 +887,10 @@ void test_convolutional_layer()
 void resize_convolutional_layer(convolutional_layer *l, int w, int h)
 {
     int total_batch = l->batch*l->steps;
+#ifdef GPU
     int old_w = l->w;
     int old_h = l->h;
+#endif
     l->w = w;
     l->h = h;
     int out_w = convolutional_out_width(*l);
@@ -967,7 +969,7 @@ void resize_convolutional_layer(convolutional_layer *l, int w, int h)
     size_t free_byte;
     size_t total_byte;
     CHECK_CUDA(cudaMemGetInfo(&free_byte, &total_byte));
-    if (l->workspace_size > free_byte || l->workspace_size >= total_byte / 2) {
+    if (l->workspace_size > (ssize_t)free_byte || l->workspace_size >= (ssize_t)total_byte / 2) {
         printf(" used slow CUDNN algo without Workspace! Need memory: %zu, available: %zu\n", l->workspace_size, (free_byte < total_byte/2) ? free_byte : total_byte/2);
         cudnn_convolutional_setup(l, cudnn_smallest, 0);
         l->workspace_size = get_convolutional_workspace_size(*l);
@@ -1061,9 +1063,9 @@ void float_to_bit(float *src, unsigned char *dst, size_t size) {
 
 void bit_to_float(unsigned char *src, float *dst, size_t size, size_t filters, float *mean_arr) {
     memset(dst, 0, size *sizeof(float));
-    size_t i;
+    int i;
 
-    for (i = 0; i < size; ++i) {
+    for (i = 0; i < (int)size; ++i) {
         float mean_val = 1;
         if(mean_arr != NULL) mean_val = fabs(mean_arr[i / (size / filters)]);
         if(get_bit(src, i)) dst[i] = mean_val;
@@ -1075,17 +1077,17 @@ void binary_align_weights(convolutional_layer *l)
 {
     int m = l->n;   // (l->n / l->groups)
     int k = l->size*l->size*l->c;   // ->size*l->size*(l->c / l->groups)
-    size_t new_lda = k + (l->lda_align - k % l->lda_align); // (k / 8 + 1) * 8;
+    int new_lda = k + (l->lda_align - k % l->lda_align); // (k / 8 + 1) * 8;
     l->new_lda = new_lda;
 
     binarize_weights(l->weights, m, k, l->binary_weights);
 
-    size_t align_weights_size = new_lda * m;
+    int align_weights_size = new_lda * m;
     l->align_bit_weights_size = align_weights_size / 8 + 1;
-    float* align_weights = (float*)xcalloc(align_weights_size, sizeof(float));
-    l->align_bit_weights = (char*)xcalloc(l->align_bit_weights_size, sizeof(char));
+    float* align_weights = xcalloc(align_weights_size, sizeof(float));
+    l->align_bit_weights = xcalloc(l->align_bit_weights_size, sizeof(char));
 
-    size_t i, j;
+    int i, j;
     // align A without transpose
     for (i = 0; i < m; ++i) {
         for (j = 0; j < k; ++j) {
@@ -1245,7 +1247,7 @@ void forward_convolutional_layer(convolutional_layer l, network_state state)
                     //printf(" l.index = %d - new XNOR \n", l.index);
 
                     int ldb_align = l.lda_align;
-                    size_t new_ldb = k + (ldb_align - k%ldb_align); // (k / 8 + 1) * 8;
+                    int new_ldb = k + (ldb_align - k%ldb_align); // (k / 8 + 1) * 8;
                     //size_t t_intput_size = new_ldb * l.bit_align;// n;
                     //size_t t_bit_input_size = t_intput_size / 8;// +1;
 
@@ -1332,7 +1334,7 @@ void forward_convolutional_layer(convolutional_layer l, network_state state)
                         //size_t ldb_align = 256; // 256 bit for AVX2
                         int ldb_align = l.lda_align;
                         size_t new_ldb = k + (ldb_align - k%ldb_align);
-                        size_t t_intput_size = binary_transpose_align_input(k, n, state.workspace, &l.t_bit_input, ldb_align, l.bit_align);
+                        // size_t t_intput_size = binary_transpose_align_input(k, n, state.workspace, &l.t_bit_input, ldb_align, l.bit_align);
 
                         // 5x times faster than gemm()-float32
                         gemm_nn_custom_bin_mean_transposed(m, n, k, 1, (unsigned char*)l.align_bit_weights, new_ldb, (unsigned char*)l.t_bit_input, new_ldb, c, n, l.mean_arr);

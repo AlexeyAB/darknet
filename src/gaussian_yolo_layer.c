@@ -67,14 +67,14 @@ layer make_gaussian_yolo_layer(int batch, int w, int h, int n, int total, int *m
 
 
     free(l.output);
-    if (cudaSuccess == cudaHostAlloc(&l.output, batch*l.outputs * sizeof(float), cudaHostRegisterMapped)) l.output_pinned = 1;
+    if (cudaSuccess == cudaHostAlloc((void**)&l.output, batch*l.outputs * sizeof(float), cudaHostRegisterMapped)) l.output_pinned = 1;
     else {
         cudaGetLastError(); // reset CUDA-error
         l.output = (float*)calloc(batch * l.outputs, sizeof(float));
     }
 
     free(l.delta);
-    if (cudaSuccess == cudaHostAlloc(&l.delta, batch*l.outputs * sizeof(float), cudaHostRegisterMapped)) l.delta_pinned = 1;
+    if (cudaSuccess == cudaHostAlloc((void**)&l.delta, batch*l.outputs * sizeof(float), cudaHostRegisterMapped)) l.delta_pinned = 1;
     else {
         cudaGetLastError(); // reset CUDA-error
         l.delta = (float*)calloc(batch * l.outputs, sizeof(float));
@@ -106,7 +106,7 @@ void resize_gaussian_yolo_layer(layer *l, int w, int h)
 
     if (l->output_pinned) {
         CHECK_CUDA(cudaFreeHost(l->output));
-        if (cudaSuccess != cudaHostAlloc(&l->output, l->batch*l->outputs * sizeof(float), cudaHostRegisterMapped)) {
+        if (cudaSuccess != cudaHostAlloc((void**)&l->output, l->batch*l->outputs * sizeof(float), cudaHostRegisterMapped)) {
             cudaGetLastError(); // reset CUDA-error
             l->output = (float*)calloc(l->batch * l->outputs, sizeof(float));
             l->output_pinned = 0;
@@ -115,7 +115,7 @@ void resize_gaussian_yolo_layer(layer *l, int w, int h)
 
     if (l->delta_pinned) {
         CHECK_CUDA(cudaFreeHost(l->delta));
-        if (cudaSuccess != cudaHostAlloc(&l->delta, l->batch*l->outputs * sizeof(float), cudaHostRegisterMapped)) {
+        if (cudaSuccess != cudaHostAlloc((void**)&l->delta, l->batch*l->outputs * sizeof(float), cudaHostRegisterMapped)) {
             cudaGetLastError(); // reset CUDA-error
             l->delta = (float*)calloc(l->batch * l->outputs, sizeof(float));
             l->delta_pinned = 0;

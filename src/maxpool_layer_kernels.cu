@@ -202,7 +202,7 @@ extern "C" void forward_maxpool_layer_gpu(maxpool_layer layer, network_state sta
     }
 
     if (layer.antialiasing) {
-        network_state s = { 0 };
+        network_state s = { };
         s.train = state.train;
         s.workspace = state.workspace;
         s.net = state.net;
@@ -217,7 +217,7 @@ extern "C" void forward_maxpool_layer_gpu(maxpool_layer layer, network_state sta
 extern "C" void backward_maxpool_layer_gpu(maxpool_layer layer, network_state state)
 {
     if (layer.antialiasing) {
-        network_state s = { 0 };
+        network_state s = { };
         s.train = state.train;
         s.workspace = state.workspace;
         s.net = state.net;
