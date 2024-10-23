@@ -336,14 +336,8 @@ void forward_connected_layer_gpu(connected_layer l, network_state state)
 {
     fill_ongpu(l.outputs*l.batch, 0, l.output_gpu, 1);
 
-    int m = l.batch;
-    int k = l.inputs;
-    int n = l.outputs;
-    float * a = state.input;
-    float * b = l.weights_gpu;
-    float * c = l.output_gpu;
 #ifdef CUDNN
-    float one = 1;    // alpha[0], beta[0]
+    //float one = 1;    // alpha[0], beta[0]
     float alpha = 1, beta = 0;
 
     CHECK_CUDNN(cudnnConvolutionForward(cudnn_handle(),
@@ -360,6 +354,12 @@ void forward_connected_layer_gpu(connected_layer l, network_state state)
         l.dstTensorDesc,
         l.output_gpu));
 #else // CUDNN
+    int m = l.batch;
+    int k = l.inputs;
+    int n = l.outputs;
+    float * a = state.input;
+    float * b = l.weights_gpu;
+    float * c = l.output_gpu;
     gemm_ongpu(0,1,m,n,k,1,a,k,b,k,1,c,n);
 #endif // CUDNN
 

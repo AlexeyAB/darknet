@@ -105,16 +105,16 @@ void test_captcha(char *cfgfile, char *weightfile, char *filename)
     srand(2222222);
     int i = 0;
     char** names = get_labels("data/captcha/reimgs.labels.list");
-    char buff[256];
+    char buff[256] = { 0 };
     char *input = buff;
     int indexes[26];
     while(1){
         if(filename){
-            strncpy(input, filename, 256);
+            strncpy(input, filename, sizeof buff - 1);
         }else{
             //printf("Enter Image Path: ");
             //fflush(stdout);
-            input = fgets(input, 256, stdin);
+            input = fgets(input, sizeof buff - 1, stdin);
             if(!input) return;
             strtok(input, "\n");
         }

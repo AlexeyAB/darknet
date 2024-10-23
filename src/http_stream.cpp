@@ -222,7 +222,7 @@ public:
 #endif
             if (s == sock) // request on master socket, accept and send main header.
             {
-                SOCKADDR_IN address = { 0 };
+                SOCKADDR_IN address = { };
                 SOCKET      client = ::accept(sock, (SOCKADDR*)&address, &addrlen);
                 if (client == SOCKET_ERROR)
                 {
@@ -250,7 +250,7 @@ public:
                     //"Content-Type: multipart/x-mixed-replace; boundary=boundary\r\n"
                     "\r\n", 0);
                 _write(client, "[\n", 0);   // open JSON array
-                int n = _write(client, outputbuf, outlen);
+                (void)_write(client, outputbuf, outlen);
                 cerr << "JSON_sender: new client " << client << endl;
             }
             else // existing client, just stream pix
@@ -471,7 +471,7 @@ public:
 #endif
             if (s == sock) // request on master socket, accept and send main header.
             {
-                SOCKADDR_IN address = { 0 };
+                SOCKADDR_IN address = { };
                 SOCKET      client = ::accept(sock, (SOCKADDR*)&address, &addrlen);
                 if (client == SOCKET_ERROR)
                 {
@@ -863,7 +863,7 @@ void set_track_id(detection *new_dets, int new_dets_num, float thresh, float sim
     // copy detections from queue of vectors to the one vector
     std::vector<detection_t> old_dets;
     for (std::vector<detection_t> &v : old_dets_dq) {
-        for (int i = 0; i < v.size(); ++i) {
+        for (size_t i = 0; i < v.size(); ++i) {
             old_dets.push_back(v[i]);
         }
     }
@@ -871,7 +871,7 @@ void set_track_id(detection *new_dets, int new_dets_num, float thresh, float sim
     std::vector<similarity_detections_t> sim_det(old_dets.size() * new_dets_num);
 
     // calculate similarity
-    for (int old_id = 0; old_id < old_dets.size(); ++old_id) {
+    for (size_t old_id = 0; old_id < old_dets.size(); ++old_id) {
         for (int new_id = 0; new_id < new_dets_num; ++new_id) {
             const int index = old_id*new_dets_num + new_id;
             const float sim = cosine_similarity(new_dets[new_id].embeddings, old_dets[old_id].embeddings, old_dets[0].embedding_size);
@@ -890,7 +890,7 @@ void set_track_id(detection *new_dets, int new_dets_num, float thresh, float sim
     std::vector<int> track_idx(new_track_id, 1);
 
     // match objects
-    for (int index = 0; index < new_dets_num*old_dets.size(); ++index) {
+    for (int index = 0; index < new_dets_num* (int)old_dets.size(); ++index) {
         const int new_id = sim_det[index].new_id;
         const int old_id = sim_det[index].old_id;
         const int track_id = old_dets[old_id].track_id;
@@ -926,7 +926,7 @@ void set_track_id(detection *new_dets, int new_dets_num, float thresh, float sim
     // add new
     old_dets_dq.push_back(new_det_vec);
     // remove old
-    if (old_dets_dq.size() > deque_size) old_dets_dq.pop_front();
+    if ((int)old_dets_dq.size() > deque_size) old_dets_dq.pop_front();
 
     // remove detection which were detected only on few frames
     for (int i = 0; i < new_dets_num; ++i) {

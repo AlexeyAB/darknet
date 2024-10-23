@@ -1260,6 +1260,8 @@ static void stbiw__jpg_writeBits(stbi__write_context *s, int *bitBufP, int *bitC
       if(c == 255) {
          stbiw__putc(s, 0);
       }
+      // FIXME: https://github.com/nothings/stb/issues/1433
+      bitBuf &= 0x0000FFFF;
       bitBuf <<= 8;
       bitCnt -= 8;
    }

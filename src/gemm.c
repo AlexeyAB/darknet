@@ -557,7 +557,10 @@ static inline float _mm256_extract_float32(__m256 a, const int index) {
 #include <cpuid.h>
 
 static inline float _dn_castu32_f32(uint32_t a) {
-    return *((float *)&a);
+    float b;
+    static_assert(sizeof(a) == sizeof(b), "");
+    memcpy(&b, &a, sizeof(b));
+    return b;
 }
 
 static inline float _mm256_extract_float32(__m256 a, const int index) {
@@ -1047,13 +1050,13 @@ void convolution_2d(int w, int h, int ksize, int n, int c, int pad, int stride,
 
     //__m256i all256_last_zero = _mm256_set1_epi32(0xFFFFFFFF);
     //all256_last_zero.m256i_i32[7] = 0;
-    __m256i all256_last_zero =
-        _mm256_set_epi32(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x0);
+    // __m256i all256_last_zero =
+    //    _mm256_set_epi32(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x0);
 
-    __m256i idx256 = _mm256_set_epi32(0, 7, 6, 5, 4, 3, 2, 1);
+    // __m256i idx256 = _mm256_set_epi32(0, 7, 6, 5, 4, 3, 2, 1);
     //__m256 all256_sing1 = _mm256_set1_ps(0x80000000);
-    __m256 all256_one = _mm256_set1_ps(1);
-    __m256i all256i_one = _mm256_set1_epi32(1);
+    // __m256 all256_one = _mm256_set1_ps(1);
+    // __m256i all256i_one = _mm256_set1_epi32(1);
 
     ///__m256i src256 = _mm256_loadu_si256((__m256i *)(&src[i]));
     ///__m256i result256 = _mm256_and_si256(src256, all256_sing1); // check sign in 8 x 32-bit floats
@@ -1073,7 +1076,7 @@ void convolution_2d(int w, int h, int ksize, int n, int c, int pad, int stride,
                 for (x = 0; x < w-8; x+=8)
                 {
                     int const output_index = fil*w*h + y*w + x;
-                    float sum = 0;
+                    //float sum = 0;
                     __m256 sum256 = _mm256_set1_ps(0);
 
                     for (chan = 0; chan < c; ++chan) {
@@ -1645,7 +1648,7 @@ void im2col_cpu_custom_bin(float* data_im,
     // optimized version
     if (height_col == height && width_col == width && stride == 1 && pad == 1 && is_fma_avx2())
     {
-        __m256i all256_sing1 = _mm256_set_epi32(0x80000000, 0x80000000, 0x80000000, 0x80000000, 0x80000000, 0x80000000, 0x80000000, 0x80000000);
+     //   __m256i all256_sing1 = _mm256_set_epi32(0x80000000, 0x80000000, 0x80000000, 0x80000000, 0x80000000, 0x80000000, 0x80000000, 0x80000000);
         __m256 float_zero256 = _mm256_set1_ps(0.00);
 
         int new_ldb = bit_align;
@@ -2038,10 +2041,11 @@ void gemm_nn_bin_32bit_packed(int M, int N, int K, float ALPHA,
 void convolution_2d(int w, int h, int ksize, int n, int c, int pad, int stride,
     float *weights, float *input, float *output, float *mean)
 {
+#if 0
     const int out_h = (h + 2 * pad - ksize) / stride + 1;    // output_height=input_height for stride=1 and pad=1
     const int out_w = (w + 2 * pad - ksize) / stride + 1;    // output_width=input_width for stride=1 and pad=1
     //int i, f, j;
-
+#endif
     int fil;
     // filter index
     #pragma omp parallel for      // "omp parallel for" - automatic parallelization of loop by using OpenMP

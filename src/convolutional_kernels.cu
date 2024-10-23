@@ -440,8 +440,8 @@ void forward_convolutional_layer_gpu(convolutional_layer l, network_state state)
         // 2. or CUDNN_CONVOLUTION_FWD_ALGO_WINOGRAD_NONFUSED
         // More: http://docs.nvidia.com/deeplearning/sdk/cudnn-developer-guide/index.html#tensor_ops
 
-        const size_t input16_size = l.batch*l.c*l.w*l.h;
-        const size_t output16_size = l.batch*l.out_c*l.out_h*l.out_w;
+        const ssize_t input16_size = l.batch*l.c*l.w*l.h;
+        const ssize_t output16_size = l.batch*l.out_c*l.out_h*l.out_w;
 
         if (*state.net.max_input16_size < input16_size) {
             //printf("\n input16_size: cur = %zu \t max = %zu \n", input16_size, *state.net.max_input16_size);
@@ -627,7 +627,7 @@ void forward_convolutional_layer_gpu(convolutional_layer l, network_state state)
     if(l.assisted_excitation && state.train) assisted_excitation_forward_gpu(l, state);
 
     if (l.antialiasing) {
-        network_state s = { 0 };
+        network_state s = { };
         s.train = state.train;
         s.workspace = state.workspace;
         s.net = state.net;
@@ -650,7 +650,7 @@ void backward_convolutional_layer_gpu(convolutional_layer l, network_state state
     }
 
     if (l.antialiasing) {
-        network_state s = { 0 };
+        network_state s = { };
         s.train = state.train;
         s.workspace = state.workspace;
         s.net = state.net;
@@ -694,8 +694,8 @@ void backward_convolutional_layer_gpu(convolutional_layer l, network_state state
     if (state.index != 0 && state.net.cudnn_half && !l.xnor && (!state.train || (iteration_num > 3 * state.net.burn_in) && state.net.loss_scale != 1) &&
         (l.c / l.groups) % 8 == 0 && l.n % 8 == 0  && l.groups <= 1 && l.size > 1)
     {
-        const size_t input16_size = l.batch*l.c*l.w*l.h;
-        const size_t delta16_size = l.batch*l.n*l.out_w*l.out_h;
+        const ssize_t input16_size = l.batch*l.c*l.w*l.h;
+        const ssize_t delta16_size = l.batch*l.n*l.out_w*l.out_h;
 
         if (*state.net.max_input16_size < input16_size) {
             *state.net.max_input16_size = input16_size;
