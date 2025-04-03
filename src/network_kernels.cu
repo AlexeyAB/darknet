@@ -676,7 +676,7 @@ float train_networks(network *nets, int n, data d, int interval)
     return (float)sum/(n);
 }
 
-float *get_network_output_layer_gpu(network net, int i)
+float *get_network_output_gpu_layer(network net, int i)
 {
     layer l = net.layers[i];
     if(l.type != REGION && l.type != YOLO && (*net.cuda_graph_ready) == 0) cuda_pull_array(l.output_gpu, l.output, l.outputs*l.batch);
@@ -687,7 +687,7 @@ float *get_network_output_gpu(network net)
 {
     int i;
     for(i = net.n-1; i > 0; --i) if(net.layers[i].type != COST) break;
-    return get_network_output_layer_gpu(net, i);
+    return get_network_output_gpu_layer(net, i);
 }
 
 float *network_predict_gpu(network net, float *input)
