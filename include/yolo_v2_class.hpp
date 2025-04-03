@@ -80,9 +80,11 @@ public:
     LIB_API ~Detector();
 
     LIB_API std::vector<bbox_t> detect(std::string image_filename, float thresh = 0.2, bool use_mean = false);
+    LIB_API std::vector<bbox_t> detect(const uint8_t* datain, const size_t data_length, float thresh = 0.2, bool use_mean = false);
     LIB_API std::vector<bbox_t> detect(image_t img, float thresh = 0.2, bool use_mean = false);
     LIB_API std::vector<std::vector<bbox_t>> detectBatch(image_t img, int batch_size, int width, int height, float thresh, bool make_nms = true);
     static LIB_API image_t load_image(std::string image_filename);
+    static LIB_API image_t load_image(const uint8_t* datain, const size_t data_length);
     static LIB_API void free_image(image_t m);
     LIB_API int get_net_width() const;
     LIB_API int get_net_height() const;
