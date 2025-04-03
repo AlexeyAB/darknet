@@ -401,7 +401,7 @@ int fill_truth_detection(const char *path, int num_boxes, int truth_size, float 
         char buff[256];
         if (id >= classes) {
             printf("\n Wrong annotation: class_id = %d. But class_id should be [from 0 to %d], file: %s \n", id, (classes-1), labelpath);
-            sprintf(buff, "echo %s \"Wrong annotation: class_id = %d. But class_id should be [from 0 to %d]\" >> bad_label.list", labelpath, id, (classes-1));
+            snprintf(buff, sizeof buff, "echo %s \"Wrong annotation: class_id = %d. But class_id should be [from 0 to %d]\" >> bad_label.list", labelpath, id, (classes-1));
             system(buff);
             ++sub;
             continue;
@@ -414,27 +414,29 @@ int fill_truth_detection(const char *path, int num_boxes, int truth_size, float 
         }
         if (x == 999999 || y == 999999) {
             printf("\n Wrong annotation: x = 0, y = 0, < 0 or > 1, file: %s \n", labelpath);
-            sprintf(buff, "echo %s \"Wrong annotation: x = 0 or y = 0\" >> bad_label.list", labelpath);
+            snprintf(buff, sizeof buff,"echo %s \"Wrong annotation: x = 0 or y = 0\" >> bad_label.list", labelpath);
             system(buff);
             ++sub;
             continue;
         }
         if (x <= 0 || x > 1 || y <= 0 || y > 1) {
             printf("\n Wrong annotation: x = %f, y = %f, file: %s \n", x, y, labelpath);
-            sprintf(buff, "echo %s \"Wrong annotation: x = %f, y = %f\" >> bad_label.list", labelpath, x, y);
+            snprintf(buff, sizeof buff, "echo %s \"Wrong annotation: x = %f, y = %f\" >> bad_label.list", labelpath, x, y);
             system(buff);
             ++sub;
             continue;
         }
         if (w > 1) {
             printf("\n Wrong annotation: w = %f, file: %s \n", w, labelpath);
-            sprintf(buff, "echo %s \"Wrong annotation: w = %f\" >> bad_label.list", labelpath, w);
+	    if (strlen(labelpath) > 251)
+		    error("path too long", DARKNET_LOC);
+            snprintf(buff, sizeof buff, "echo %s \"Wrong annotation: w = %f\" >> bad_label.list", labelpath, w);
             system(buff);
             w = 1;
         }
         if (h > 1) {
             printf("\n Wrong annotation: h = %f, file: %s \n", h, labelpath);
-            sprintf(buff, "echo %s \"Wrong annotation: h = %f\" >> bad_label.list", labelpath, h);
+            snprintf(buff, sizeof buff, "echo %s \"Wrong annotation: h = %f\" >> bad_label.list", labelpath, h);
             system(buff);
             h = 1;
         }
@@ -474,7 +476,7 @@ void fill_truth_captcha(char *path, int n, float *truth)
     char *begin = strrchr(path, '/');
     ++begin;
     int i;
-    for(i = 0; i < strlen(begin) && i < n && begin[i] != '.'; ++i){
+    for(i = 0; i < (int)strlen(begin) && i < n && begin[i] != '.'; ++i){
         int index = alphanum_to_int(begin[i]);
         if(index > 35) printf("Bad %c\n", begin[i]);
         truth[i*NUMCHARS+index] = 1;
@@ -1073,7 +1075,7 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int c, int bo
     d.X.vals = (float**)xcalloc(d.X.rows, sizeof(float*));
     d.X.cols = h*w*c;
 
-    float r1 = 0, r2 = 0, r3 = 0, r4 = 0, r_scale = 0;
+    float r1 = 0, r2 = 0, r3 = 0, r4 = 0; //, r_scale = 0;
     float resize_r1 = 0, resize_r2 = 0;
     float dhue = 0, dsat = 0, dexp = 0, flip = 0, blur = 0;
     int augmentation_calculated = 0, gaussian_noise = 0;
@@ -1132,7 +1134,7 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int c, int bo
                     flip = use_flip ? random_gen() % 2 : 0;
                 }
 
-                r_scale = random_float();
+                //r_scale = random_float();
 
                 if (!contrastive || contrastive_color || i % 2 == 0)
                 {
@@ -1286,7 +1288,7 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int c, int bo
                 const int bot_shift = min_val_cmp(h - cut_y[i], max_val_cmp(0, (-pbot*h / oh)));
 
 
-                int k, x, y;
+                int k, y;
                 for (k = 0; k < c; ++k) {
                     for (y = 0; y < h; ++y) {
                         int j = y*w + k*w*h;
@@ -1396,7 +1398,7 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int c, int bo
     d.X.vals = (float**)xcalloc(d.X.rows, sizeof(float*));
     d.X.cols = h*w*c;
 
-    float r1 = 0, r2 = 0, r3 = 0, r4 = 0, r_scale;
+    float r1 = 0, r2 = 0, r3 = 0, r4 = 0; //, r_scale;
     float resize_r1 = 0, resize_r2 = 0;
     float dhue = 0, dsat = 0, dexp = 0, flip = 0;
     int augmentation_calculated = 0;
@@ -1442,7 +1444,7 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int c, int bo
                     flip = use_flip ? random_gen() % 2 : 0;
                 }
 
-                r_scale = random_float();
+                // r_scale = random_float();
 
                 if (!contrastive || contrastive_color || i % 2 == 0)
                 {

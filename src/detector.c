@@ -61,7 +61,9 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
     char *base = basecfg(cfgfile);
     printf("%s\n", base);
     float avg_loss = -1;
+#ifdef OPENCV
     float avg_contrastive_acc = 0;
+#endif
     network* nets = (network*)xcalloc(ngpus, sizeof(network));
 
     srand(time(0));
@@ -324,8 +326,9 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
         }
         printf("\n %d: %f, %f avg loss, %f rate, %lf seconds, %d images, %f hours left\n", iteration, loss, avg_loss, get_current_rate(net), (what_time_is_it_now() - time), iteration*imgs, avg_time);
         fflush(stdout);
-
-        int draw_precision = 0;
+#ifdef OPENCV
+	int draw_precision = 0;
+#endif
         if (calc_map && (iteration >= next_map_calc || iteration == net.max_batches)) {
             if (l.random) {
                 printf("Resizing to initial size: %d x %d ", init_w, init_h);
@@ -371,8 +374,9 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
                 sprintf(buff, "%s/%s_best.weights", backup_directory, base);
                 save_weights(net, buff);
             }
-
+#ifdef OPENCV
             draw_precision = 1;
+#endif
         }
         time_remaining = ((net.max_batches - iteration) / ngpus)*(what_time_is_it_now() - time + load_time) / 60 / 60;
         // set initial value, even if resume training from 10000 iteration
@@ -454,7 +458,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
     }
 }
 
-
+#if 0
 static int get_coco_image_id(char *filename)
 {
     char *p = strrchr(filename, '/');
@@ -462,6 +466,7 @@ static int get_coco_image_id(char *filename)
     if (c) p = c;
     return atoi(p + 1);
 }
+#endif
 
 static void print_cocos(FILE *fp, char *image_path, detection *dets, int num_boxes, int classes, int w, int h)
 {
@@ -582,7 +587,7 @@ static void eliminate_bdd(char *buf, char *a)
             {
                 if (a[++n] == '\0')
                 {
-                    for (k; buf[k + n] != '\0'; k++)
+                    for (; buf[k + n] != '\0'; k++)
                     {
                         buf[k] = buf[k + n];
                     }
@@ -701,9 +706,9 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *out
         if (!outfile) outfile = "kitti_results";
         printf("%s\n", outfile);
         snprintf(buff, 1024, "%s/%s", prefix, outfile);
-        int mkd = make_directory(buff, 0777);
+        (void)make_directory(buff, 0777);
         snprintf(buff2, 1024, "%s/%s/data", prefix, outfile);
-        int mkd2 = make_directory(buff2, 0777);
+        (void)make_directory(buff2, 0777);
         kitti = 1;
     }
     else if (0 == strcmp(type, "imagenet")) {
@@ -1320,13 +1325,12 @@ float validate_detector_map(char *datacfg, char *cfgfile, char *weightfile, floa
             for (point = 0; point < map_points; ++point) {
                 double cur_recall = point * 1.0 / (map_points-1);
                 double cur_precision = 0;
-                double cur_prob = 0;
                 for (rank = 0; rank < detections_count; ++rank)
                 {
                     if (pr[i][rank].recall >= cur_recall) {    // > or >=
                         if (pr[i][rank].precision > cur_precision) {
                             cur_precision = pr[i][rank].precision;
-                            cur_prob = pr[i][rank].prob;
+                            // cur_prob = pr[i][rank].prob;
                         }
                     }
                 }
@@ -1340,8 +1344,8 @@ float validate_detector_map(char *datacfg, char *cfgfile, char *weightfile, floa
         printf("class_id = %d, name = %s, ap = %2.2f%%   \t (TP = %d, FP = %d) \n",
             i, names[i], avg_precision * 100, tp_for_thresh_per_class[i], fp_for_thresh_per_class[i]);
 
-        float class_precision = (float)tp_for_thresh_per_class[i] / ((float)tp_for_thresh_per_class[i] + (float)fp_for_thresh_per_class[i]);
-        float class_recall = (float)tp_for_thresh_per_class[i] / ((float)tp_for_thresh_per_class[i] + (float)(truth_classes_count[i] - tp_for_thresh_per_class[i]));
+        //float class_precision = (float)tp_for_thresh_per_class[i] / ((float)tp_for_thresh_per_class[i] + (float)fp_for_thresh_per_class[i]);
+        //float class_recall = (float)tp_for_thresh_per_class[i] / ((float)tp_for_thresh_per_class[i] + (float)(truth_classes_count[i] - tp_for_thresh_per_class[i]));
         //printf("Precision = %1.2f, Recall = %1.2f, avg IOU = %2.2f%% \n\n", class_precision, class_recall, avg_iou_per_class[i]);
 
         mean_average_precision += avg_precision;
@@ -1639,7 +1643,7 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
             name_list, names_size, net.layers[net.n - 1].classes, cfgfile);
     }
     srand(2222222);
-    char buff[256];
+    char buff[256] = { 0 };
     char *input = buff;
     char *json_buf = NULL;
     int json_image_id = 0;
@@ -1656,14 +1660,14 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
     float nms = .45;    // 0.4F
     while (1) {
         if (filename) {
-            strncpy(input, filename, 256);
+            strncpy(input, filename, sizeof buff - 1);
             if (strlen(input) > 0)
                 if (input[strlen(input) - 1] == 0x0d) input[strlen(input) - 1] = 0;
         }
         else {
             printf("Enter Image Path: ");
             fflush(stdout);
-            input = fgets(input, 256, stdin);
+            input = fgets(input, sizeof buff - 1, stdin);
             if (!input) break;
             strtok(input, "\n");
         }
@@ -1800,14 +1804,14 @@ void draw_object(char *datacfg, char *cfgfile, char *weightfile, char *filename,
     }
 
     srand(2222222);
-    char buff[256];
+    char buff[256] = { 0 };
     char *input = buff;
 
     int j;
     float nms = .45;    // 0.4F
     while (1) {
         if (filename) {
-            strncpy(input, filename, 256);
+            strncpy(input, filename, sizeof buff - 1);
             if (strlen(input) > 0)
                 if (input[strlen(input) - 1] == 0x0d) input[strlen(input) - 1] = 0;
         }
@@ -1869,7 +1873,7 @@ void draw_object(char *datacfg, char *cfgfile, char *weightfile, char *filename,
             float avg_loss = get_network_cost(net);
             draw_train_loss(windows_name, img, img_size, avg_loss, max_img_loss, iteration, it_num, 0, 0, "mAP%", 0, dont_show, 0, 0);
 
-            float inv_loss = 1.0 / max_val_cmp(0.01, avg_loss);
+            //float inv_loss = 1.0 / max_val_cmp(0.01, avg_loss);
             //net.learning_rate = *lr_set * inv_loss;
 
             if (*boxonly) {

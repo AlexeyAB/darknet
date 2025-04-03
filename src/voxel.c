@@ -22,10 +22,10 @@ void extract_voxel(char *lfile, char *rfile, char *prefix)
         }
         image ls = crop_image(l, (l.w - w)/2, (l.h - h)/2, w, h);
         image rs = crop_image(r, 105 + (r.w - w)/2, (r.h - h)/2 + shift, w, h);
-        char buff[256];
-        sprintf(buff, "%s_%05d_l", prefix, count);
+        char buff[256] = { 0 };
+        snprintf(buff, sizeof buff, "%s_%05d_l", prefix, count);
         save_image(ls, buff);
-        sprintf(buff, "%s_%05d_r", prefix, count);
+        snprintf(buff, sizeof buff, "%s_%05d_r", prefix, count);
         save_image(rs, buff);
         free_image(l);
         free_image(r);
@@ -90,19 +90,19 @@ void train_voxel(char *cfgfile, char *weightfile)
 
         printf("%d: %f, %f avg, %f rate, %lf seconds, %d images\n", i, loss, avg_loss, get_current_rate(net), sec(clock()-time), i*imgs);
         if(i%1000==0){
-            char buff[256];
-            sprintf(buff, "%s/%s_%d.weights", backup_directory, base, i);
+            char buff[256] = { 0 };
+            snprintf(buff, sizeof buff, "%s/%s_%d.weights", backup_directory, base, i);
             save_weights(net, buff);
         }
         if(i%100==0){
-            char buff[256];
-            sprintf(buff, "%s/%s.backup", backup_directory, base);
+            char buff[256] = { 0 };
+            snprintf(buff, sizeof buff,  "%s/%s.backup", backup_directory, base);
             save_weights(net, buff);
         }
         free_data(train);
     }
-    char buff[256];
-    sprintf(buff, "%s/%s_final.weights", backup_directory, base);
+    char buff[256] = { 0 };
+    snprintf(buff, sizeof buff,  "%s/%s_final.weights", backup_directory, base);
     save_weights(net, buff);
 }
 
@@ -116,15 +116,15 @@ void test_voxel(char *cfgfile, char *weightfile, char *filename)
     srand(2222222);
 
     clock_t time;
-    char buff[256];
+    char buff[256] = { 0 };
     char *input = buff;
     while(1){
         if(filename){
-            strncpy(input, filename, 256);
+            strncpy(input, filename, sizeof buff - 1);
         }else{
             printf("Enter Image Path: ");
             fflush(stdout);
-            input = fgets(input, 256, stdin);
+            input = fgets(input, sizeof buff - 1, stdin);
             if(!input) return;
             strtok(input, "\n");
         }
