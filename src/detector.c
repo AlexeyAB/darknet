@@ -9,6 +9,14 @@
 #include "demo.h"
 #include "option_list.h"
 
+#ifdef STREAM
+#include "stream.h"
+#endif
+
+#ifdef FFMPEG
+#include "image_ffmpeg.h"
+#endif
+
 #ifndef __COMPAR_FN_T
 #define __COMPAR_FN_T
 typedef int (*__compar_fn_t)(const void*, const void*);
@@ -158,7 +166,6 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
     args.mosaic_bound = net.mosaic_bound;
     args.contrastive = net.contrastive;
     args.contrastive_jit_flip = net.contrastive_jit_flip;
-    args.contrastive_color = net.contrastive_color;
     if (dont_show && show_imgs) show_imgs = 2;
     args.show_imgs = show_imgs;
 
@@ -1979,6 +1986,15 @@ void run_detector(int argc, char **argv)
     int ext_output = find_arg(argc, argv, "-ext_output");
     int save_labels = find_arg(argc, argv, "-save_labels");
     char* chart_path = find_char_arg(argc, argv, "-chart", 0);
+
+    int stream_bitrate = find_int_arg(argc, argv, "-stream_bitrate", 0);
+    int stream_frame_width = find_int_arg(argc, argv, "-stream_width", 0);
+    int stream_frame_height = find_int_arg(argc, argv, "-stream_height", 0);
+    int stream_gop_size = find_int_arg(argc, argv, "-stream_gop", 0);
+    int stream_fps = find_int_arg(argc, argv, "-stream_fps", 0);
+    char *stream_addr = find_char_arg(argc, argv, "-stream_address", 0);
+    char *stream_profile = find_char_arg(argc, argv, "-stream_profile", "high444");
+
     // While training, decide after how many epochs mAP will be calculated. Default value is 4 which means the mAP will be calculated after each 4 epochs
     int mAP_epochs = find_int_arg(argc, argv, "-mAP_epochs", 4);
     if (argc < 4) {
@@ -2028,7 +2044,7 @@ void run_detector(int argc, char **argv)
         int it_num = 100;
         draw_object(datacfg, cfg, weights, filename, thresh, dont_show, it_num, letter_box, benchmark_layers);
     }
-    else if (0 == strcmp(argv[2], "demo")) {
+    else if (0 == strcmp(argv[2], "demo") || 0 == strcmp(argv[2], "stream")) {
         list *options = read_data_cfg(datacfg);
         int classes = option_find_int(options, "classes", 20);
         char *name_list = option_find_str(options, "names", "data/names.list");
@@ -2036,9 +2052,18 @@ void run_detector(int argc, char **argv)
         if (filename)
             if (strlen(filename) > 0)
                 if (filename[strlen(filename) - 1] == 0x0d) filename[strlen(filename) - 1] = 0;
-        demo(cfg, weights, thresh, hier_thresh, cam_index, filename, names, classes, avgframes, frame_skip, prefix, out_filename,
-            mjpeg_port, dontdraw_bbox, json_port, dont_show, ext_output, letter_box, time_limit_sec, http_post_host, benchmark, benchmark_layers, json_file_output);
 
+        if (0 == strcmp(argv[2], "demo")){
+            demo(cfg, weights, thresh, hier_thresh, cam_index, filename, names, classes, avgframes, frame_skip, prefix, out_filename,
+            mjpeg_port, dontdraw_bbox, json_port, dont_show, ext_output, letter_box, time_limit_sec, http_post_host, benchmark, benchmark_layers, json_file_output);
+        }
+#ifdef STREAM
+        if (0 == strcmp(argv[2], "stream")){
+            stream(cfg, weights, thresh, hier_thresh, cam_index, filename, names, classes, avgframes, frame_skip, prefix, out_filename,
+            mjpeg_port, dontdraw_bbox, json_port, dont_show, ext_output, letter_box, time_limit_sec, http_post_host, benchmark, benchmark_layers,
+            stream_bitrate, stream_addr, stream_frame_width, stream_frame_height, stream_profile, stream_gop_size, stream_fps);
+        }
+#endif
         free_list_contents_kvp(options);
         free_list(options);
     }
