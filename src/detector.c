@@ -95,7 +95,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
     }
 
     int save_after_iterations = option_find_int(options, "saveweights", (net.max_batches < 10000) ? 1000 : 10000 );  // configure when to write weights. Very useful for smaller datasets!
-	int save_last_weights_after = option_find_int(options, "savelast", 100);
+    int save_last_weights_after = option_find_int(options, "savelast", 100);
     printf("Weights are saved after: %d iterations. Last weights (*_last.weight) are stored every %d iterations. \n", save_after_iterations, save_last_weights_after );
 
 
@@ -398,6 +398,16 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
             char buff[256];
             sprintf(buff, "%s/%s_%d.weights", backup_directory, base, iteration);
             save_weights(net, buff);
+
+            //save text file with current loss and avg scores.
+            sprintf(buff, "%s/progress.txt", backup_directory);
+            FILE *fp = NULL;
+            fp = fopen(buff, "a");
+            if (fp != NULL)
+            {
+                fprintf(fp, "%d: %f, %f avg, %f rate, %lf seconds, %d images\n", iteration, loss, avg_loss, get_current_rate(net), sec(clock() - time), iteration * imgs);
+                fclose(fp);
+            }
         }
 
         if ( (save_after_iterations > save_last_weights_after) && (iteration >= (iter_save_last + save_last_weights_after) || (iteration % save_last_weights_after == 0 && iteration > 1))) {
