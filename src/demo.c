@@ -46,9 +46,18 @@ static mat_cv** cv_images;
 mat_cv* in_img;
 mat_cv* det_img;
 mat_cv* show_img;
+#ifdef REALSENSE2
+mat_cv* depth_img;
+mat_cv* depth_value;
+
+#endif
 
 static volatile int flag_exit;
 static int letter_box = 0;
+
+#ifdef REALSENSE2
+static volatile int flag_select_roi;
+#endif
 
 static const int thread_wait_ms = 1;
 static volatile int run_fetch_in_thread = 0;
@@ -69,6 +78,7 @@ void *fetch_in_thread(void *ptr)
             in_s = get_image_from_stream_letterbox(cap, net.w, net.h, net.c, &in_img, dont_close_stream);
         else
             in_s = get_image_from_stream_resize(cap, net.w, net.h, net.c, &in_img, dont_close_stream);
+		
         if (!in_s.data) {
             printf("Stream closed.\n");
             custom_atomic_store_int(&flag_exit, 1);
@@ -147,6 +157,9 @@ void demo(char *cfgfile, char *weightfile, float thresh, float hier_thresh, int 
     avg_frames = avgframes;
     letter_box = letter_box_in;
     in_img = det_img = show_img = NULL;
+#ifdef REALSENSE2	
+	depth_img = NULL ;
+#endif	
     //skip = frame_skip;
     image **alphabet = load_alphabet();
     int delay = frame_skip;
@@ -214,6 +227,10 @@ void demo(char *cfgfile, char *weightfile, float thresh, float hier_thresh, int 
 
     flag_exit = 0;
 
+	#ifdef REALSENSE2
+	flag_select_roi = 0 ;
+	#endif
+
     custom_thread_t fetch_thread = NULL;
     custom_thread_t detect_thread = NULL;
     if (custom_create_thread(&fetch_thread, 0, fetch_in_thread, 0)) error("Thread creation failed", DARKNET_LOC);
@@ -239,7 +256,11 @@ void demo(char *cfgfile, char *weightfile, float thresh, float hier_thresh, int 
     int count = 0;
     if(!prefix && !dont_show){
         int full_screen = 0;
-        create_window_cv("Demo", full_screen, 1352, 1013);
+        create_window_cv("Demo", full_screen, 640, 480);
+
+		#ifdef REALSENSE2
+		create_window_cv("Depth", full_screen, 640, 480);
+		#endif
     }
 
 
@@ -318,7 +339,88 @@ void demo(char *cfgfile, char *weightfile, float thresh, float hier_thresh, int 
                 }
             }
 
-            if (!benchmark && !dontdraw_bbox) draw_detections_cv_v3(show_img, local_dets, local_nboxes, demo_thresh, demo_names, demo_alphabet, demo_classes, demo_ext_output);
+            if (!benchmark && !dontdraw_bbox)
+			{
+				draw_detections_cv_v3(show_img, local_dets, local_nboxes, demo_thresh, demo_names, demo_alphabet, demo_classes, demo_ext_output);
+
+				#ifdef REALSENSE2			
+				cv::Mat *depth = NULL;
+				depth = (cv::Mat*)get_depth_frame_cv(cap);
+				depth_img = (mat_cv *)depth ;
+
+				cv::Mat *depth_v = NULL;
+				depth_v = (cv::Mat*)get_depth_value_cv(cap);
+
+				//check size
+				cv::Mat *s_img = (cv::Mat*)show_img;
+				cv::Mat *d_img = (cv::Mat*)depth_img;
+
+				if( s_img && d_img )
+				{
+					const float scale_w = (float)s_img->cols / (float)d_img->cols ;
+					const float scale_h = (float)s_img->rows / (float)d_img->rows ;
+					if( scale_w != 1.0 || scale_h != 1.0 )
+					{
+						//resize
+						cv::resize(*d_img, *d_img, cv::Size(), scale_w, scale_h, cv::INTER_LINEAR);
+					}
+					
+					draw_detections_cv_v3(depth_img, local_dets, local_nboxes, demo_thresh, demo_names, demo_alphabet, demo_classes, demo_ext_output);
+
+					//select roi
+					if( flag_select_roi == 1 )
+					{
+						if( depth_v && d_img)
+						{
+							cv::Rect2d r = cv::selectROI(*d_img);
+							
+							cv::Point pt_roi_center = cv::Point(r.width/2, r.height/2) ;
+								
+							cv::Mat roi_depth_value = (*depth_v)(r) ;
+							cv::Mat roi_depth_image = (*d_img)(r) ;
+
+							cv::imwrite("roi_depth_value.png", roi_depth_value) ;
+							cv::imwrite("roi_depth_image.png", roi_depth_image) ;
+
+							//roi raw data file save
+							FILE * file_save_roi_data;
+  							file_save_roi_data = fopen ("roi_raw.txt","w");
+
+							FILE * file_save_roi_data_center;
+  							file_save_roi_data_center = fopen ("roi_raw_center.txt","w");
+							
+							unsigned short* ptr_roi_depth_value = (unsigned short*)roi_depth_value.data; // v+1행 첫 칸의 주소를 불러온다. 
+							int y_index = 0 ;
+							for(int y= 0;y<roi_depth_value.rows ; y++)
+							{
+								y_index = y*roi_depth_value.cols ;
+								
+								for(int x = 0 ; x<roi_depth_value.cols; x++)
+								{
+									unsigned short z = ptr_roi_depth_value[y_index + x] ; 
+
+									fprintf (file_save_roi_data, "%.3f %.3f %.3f\n",(float)x, (float)y, (float)z);
+
+									//roi center
+									int save_x = x - pt_roi_center.x ;
+									int save_y = y - pt_roi_center.y ;
+									fprintf (file_save_roi_data_center, "%.3f %.3f %.3f\n",(float)save_x, (float)save_y, (float)z);
+									
+								}
+							}
+
+							fclose(file_save_roi_data);
+							fclose(file_save_roi_data_center);
+
+							//cv::destroyWindow("ROI Selector") ;
+						}
+					
+						flag_select_roi = 0 ;
+					}
+				}
+				#endif
+            }
+			
             free_detections(local_dets, local_nboxes);
 
             printf("\nFPS:%.1f \t AVG_FPS:%.1f\n", fps, avg_fps);
@@ -326,7 +428,15 @@ void demo(char *cfgfile, char *weightfile, float thresh, float hier_thresh, int 
             if(!prefix){
                 if (!dont_show) {
                     const int each_frame = max_val_cmp(1, avg_fps / 60);
-                    if(global_frame_counter % each_frame == 0) show_image_mat(show_img, "Demo");
+                    if(global_frame_counter % each_frame == 0)
+					{
+						show_image_mat(show_img, "Demo");
+
+						#ifdef REALSENSE2
+						show_image_mat(depth_img, "Depth");
+						#endif
+                    }
+					
                     int c = wait_key_cv(1);
                     if (c == 10) {
                         if (frame_skip == 0) frame_skip = 60;
@@ -338,6 +448,13 @@ void demo(char *cfgfile, char *weightfile, float thresh, float hier_thresh, int 
                     {
                         flag_exit = 1;
                     }
+					#ifdef REALSENSE2
+					else if( c == 's' || c == 'S' )
+					{
+						flag_select_roi = 1 ;
+						
+					}
+					#endif
                 }
             }else{
                 char buff[256];
@@ -378,7 +495,8 @@ void demo(char *cfgfile, char *weightfile, float thresh, float hier_thresh, int 
 
             if (flag_exit == 1) break;
 
-            if(delay == 0){
+            if(delay == 0)
+			{
                 if(!benchmark) release_mat(&show_img);
                 show_img = det_img;
             }
