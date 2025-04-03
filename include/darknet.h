@@ -780,6 +780,7 @@ typedef struct network {
     int contrastive_color;
     int unsupervised;
     float angle;
+    int angle_detector;
     float aspect;
     float exposure;
     float saturation;
@@ -979,6 +980,7 @@ typedef struct load_args {
     int blur;
     int mixup;
     float label_smooth_eps;
+    int angle_detector;
     float angle;
     float aspect;
     float saturation;
