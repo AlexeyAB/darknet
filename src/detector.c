@@ -21,6 +21,31 @@ typedef __compar_fn_t comparison_fn_t;
 
 static int coco_ids[] = { 1,2,3,4,5,6,7,8,9,10,11,13,14,15,16,17,18,19,20,21,22,23,24,25,27,28,31,32,33,34,35,36,37,38,39,40,41,42,43,44,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,67,70,72,73,74,75,76,77,78,79,80,81,82,84,85,86,87,88,89,90 };
 
+inline void check_fwrite_error(size_t writed, const char * desc)
+{
+    if (writed < 0) perror(desc);
+}
+
+inline void check_fprintf_error(size_t code, const char * desc)
+{
+    if (code < 0) perror(desc);
+}
+
+inline void check_sprintf_error(size_t code, const char * desc)
+{
+    if (code < 0) perror(desc);
+}
+
+inline void check_snprintf_error(size_t result, const char * desc)
+{
+    if (result < 0) perror(desc);
+}
+
+inline void check_fseek_error(size_t result, const char * desc)
+{
+    if (result < 0) perror(desc);
+}
+
 void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, int ngpus, int clear, int dont_show, int calc_map, float thresh, float iou_thresh, int mjpeg_port, int show_imgs, int benchmark_layers, char* chart_path, int mAP_epochs)
 {
     list *options = read_data_cfg(datacfg);
@@ -172,7 +197,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
     int number_of_lines = 100;
     int img_size = 1000;
     char windows_name[100];
-    sprintf(windows_name, "chart_%s.png", base);
+    check_sprintf_error(sprintf(windows_name, "chart_%s.png", base), " while generating window name error");
     img = draw_train_chart(windows_name, max_img_loss, net.max_batches, number_of_lines, img_size, dont_show, chart_path);
 #endif    //OPENCV
     if (net.contrastive && args.threads > net.batch/2) args.threads = net.batch / 2;
@@ -194,7 +219,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
     //while(i*imgs < N*120){
     while (get_current_iteration(net) < net.max_batches) {
         if (l.random && count++ % 10 == 0) {
-            float rand_coef = 1.4;
+            float rand_coef = 1.4F;
             if (l.random != 1.0) rand_coef = l.random;
             printf("Resizing, random_coef = %.2f \n", rand_coef);
             float random_val = rand_scale(rand_coef);    // *x or /x
@@ -294,7 +319,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
         loss = train_network(net, train);
 #endif
         if (avg_loss < 0 || avg_loss != avg_loss) avg_loss = loss;    // if(-inf or nan)
-        avg_loss = avg_loss*.9 + loss*.1;
+        avg_loss = avg_loss*.9F + loss*.1F;
 
         const int iteration = get_current_iteration(net);
         //i = get_current_batch(net);
@@ -368,7 +393,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
                 best_map = mean_average_precision;
                 printf("New best mAP!\n");
                 char buff[256];
-                sprintf(buff, "%s/%s_best.weights", backup_directory, base);
+                check_sprintf_error(sprintf(buff, "%s/%s_best.weights", backup_directory, base), "unable to create best weights filename");
                 save_weights(net, buff);
             }
 
@@ -396,7 +421,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
             if (ngpus != 1) sync_nets(nets, ngpus, 0);
 #endif
             char buff[256];
-            sprintf(buff, "%s/%s_%d.weights", backup_directory, base, iteration);
+            check_sprintf_error(sprintf(buff, "%s/%s_%ld.weights", backup_directory, base, iteration), "unable to create weights filename");
             save_weights(net, buff);
         }
 
@@ -406,11 +431,11 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
             if (ngpus != 1) sync_nets(nets, ngpus, 0);
 #endif
             char buff[256];
-            sprintf(buff, "%s/%s_last.weights", backup_directory, base);
+            check_sprintf_error(sprintf(buff, "%s/%s_last.weights", backup_directory, base), "unable to create last weights filename");
             save_weights(net, buff);
 
             if (net.ema_alpha && is_ema_initialized(net)) {
-                sprintf(buff, "%s/%s_ema.weights", backup_directory, base);
+                check_sprintf_error(sprintf(buff, "%s/%s_ema.weights", backup_directory, base), " unable to create ema weights filename");
                 save_weights_upto(net, buff, net.n, 1);
                 printf(" EMA weights are saved to the file: %s \n", buff);
             }
@@ -421,7 +446,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
     if (ngpus != 1) sync_nets(nets, ngpus, 0);
 #endif
     char buff[256];
-    sprintf(buff, "%s/%s_final.weights", backup_directory, base);
+    check_sprintf_error(sprintf(buff, "%s/%s_final.weights", backup_directory, base), "unable to create final weights filename");
     save_weights(net, buff);
     printf("If you want to train from the beginning, then use flag in the end of training command: -clear \n");
 
@@ -488,8 +513,8 @@ static void print_cocos(FILE *fp, char *image_path, detection *dets, int num_box
         for (j = 0; j < classes; ++j) {
             if (dets[i].prob[j] > 0) {
                 char buff[1024];
-                sprintf(buff, "{\"image_id\":%d, \"category_id\":%d, \"bbox\":[%f, %f, %f, %f], \"score\":%f},\n", image_id, coco_ids[j], bx, by, bw, bh, dets[i].prob[j]);
-                fprintf(fp, "%s", buff);
+                check_sprintf_error(sprintf(buff, "{\"image_id\":%d, \"category_id\":%d, \"bbox\":[%f, %f, %f, %f], \"score\":%f},\n", image_id, coco_ids[j], bx, by, bw, bh, dets[i].prob[j]), "unable to create cocos precision str");
+                check_fprintf_error(fprintf(fp, "%s", buff), "Unable to write cocos precision result");
                 //printf("%s", buff);
             }
         }
@@ -511,8 +536,8 @@ void print_detector_detections(FILE **fps, char *id, detection *dets, int total,
         if (ymax > h) ymax = h;
 
         for (j = 0; j < classes; ++j) {
-            if (dets[i].prob[j]) fprintf(fps[j], "%s %f %f %f %f %f\n", id, dets[i].prob[j],
-                xmin, ymin, xmax, ymax);
+            if (dets[i].prob[j]) check_fprintf_error(fprintf(fps[j], "%s %f %f %f %f %f\n", id, dets[i].prob[j],
+                xmin, ymin, xmax, ymax), "unable to write detector detection");
         }
     }
 }
@@ -533,8 +558,8 @@ void print_imagenet_detections(FILE *fp, int id, detection *dets, int total, int
 
         for (j = 0; j < classes; ++j) {
             int myclass = j;
-            if (dets[i].prob[myclass] > 0) fprintf(fp, "%d %d %f %f %f %f %f\n", id, j + 1, dets[i].prob[myclass],
-                xmin, ymin, xmax, ymax);
+            if (dets[i].prob[myclass] > 0) check_fprintf_error(fprintf(fp, "%d %d %f %f %f %f %f\n", id, j + 1, dets[i].prob[myclass],
+                xmin, ymin, xmax, ymax), "unable to write imagenet detection");
         }
     }
 }
@@ -544,7 +569,7 @@ static void print_kitti_detections(FILE **fps, char *id, detection *dets, int to
     char *kitti_ids[] = { "car", "pedestrian", "cyclist" };
     FILE *fpd = 0;
     char buffd[1024];
-    snprintf(buffd, 1024, "%s/%s/data/%s.txt", prefix, outfile, id);
+    check_snprintf_error(snprintf(buffd, 1024, "%s/%s/data/%s.txt", prefix, outfile, id), "unable to create kitti outfile name");
 
     fpd = fopen(buffd, "w");
     int i, j;
@@ -563,7 +588,7 @@ static void print_kitti_detections(FILE **fps, char *id, detection *dets, int to
         for (j = 0; j < classes; ++j)
         {
             //if (dets[i].prob[j]) fprintf(fpd, "%s 0 0 0 %f %f %f %f -1 -1 -1 -1 0 0 0 %f\n", kitti_ids[j], xmin, ymin, xmax, ymax, dets[i].prob[j]);
-            if (dets[i].prob[j]) fprintf(fpd, "%s -1 -1 -10 %f %f %f %f -1 -1 -1 -1000 -1000 -1000 -10 %f\n", kitti_ids[j], xmin, ymin, xmax, ymax, dets[i].prob[j]);
+            if (dets[i].prob[j]) check_fprintf_error(fprintf(fpd, "%s -1 -1 -10 %f %f %f %f -1 -1 -1 -1000 -1000 -1000 -10 %f\n", kitti_ids[j], xmin, ymin, xmax, ymax, dets[i].prob[j]), "unable to write kitti detection");
         }
     }
     fclose(fpd);
@@ -631,7 +656,7 @@ static void print_bdd_detections(FILE *fp, char *image_path, detection *dets, in
         {
             if (dets[i].prob[j])
             {
-                fprintf(fp, "\t{\n\t\t\"name\":\"%s\",\n\t\t\"category\":\"%s\",\n\t\t\"bbox\":[%f, %f, %f, %f],\n\t\t\"score\":%f\n\t},\n", image_path, bdd_ids[j], bx1, by1, bx2, by2, dets[i].prob[j]);
+                check_fprintf_error(fprintf(fp, "\t{\n\t\t\"name\":\"%s\",\n\t\t\"category\":\"%s\",\n\t\t\"bbox\":[%f, %f, %f, %f],\n\t\t\"score\":%f\n\t},\n", image_path, bdd_ids[j], bx1, by1, bx2, by2, dets[i].prob[j]), "unable to write bdd detection");
             }
         }
     }
@@ -684,31 +709,31 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *out
 
     if (0 == strcmp(type, "coco")) {
         if (!outfile) outfile = "coco_results";
-        snprintf(buff, 1024, "%s/%s.json", prefix, outfile);
+        check_snprintf_error(snprintf(buff, 1024, "%s/%s.json", prefix, outfile), "unable to create coco results filename");
         fp = fopen(buff, "w");
-        fprintf(fp, "[\n");
+        check_fprintf_error(fprintf(fp, "[\n"), "unable to write coco results");
         coco = 1;
     }
     else if (0 == strcmp(type, "bdd")) {
         if (!outfile) outfile = "bdd_results";
-        snprintf(buff, 1024, "%s/%s.json", prefix, outfile);
+        check_snprintf_error(snprintf(buff, 1024, "%s/%s.json", prefix, outfile), "unable to create bdd results filename");
         fp = fopen(buff, "w");
-        fprintf(fp, "[\n");
+        check_fprintf_error(fprintf(fp, "[\n"), "unable to write bdd results");
         bdd = 1;
     }
     else if (0 == strcmp(type, "kitti")) {
         char buff2[1024];
         if (!outfile) outfile = "kitti_results";
         printf("%s\n", outfile);
-        snprintf(buff, 1024, "%s/%s", prefix, outfile);
+        check_snprintf_error(snprintf(buff, 1024, "%s/%s", prefix, outfile), "unable to create kitti results filename");
         int mkd = make_directory(buff, 0777);
-        snprintf(buff2, 1024, "%s/%s/data", prefix, outfile);
+        check_snprintf_error(snprintf(buff2, 1024, "%s/%s/data", prefix, outfile), "unable to create kitti results data dirname");
         int mkd2 = make_directory(buff2, 0777);
         kitti = 1;
     }
     else if (0 == strcmp(type, "imagenet")) {
         if (!outfile) outfile = "imagenet-detection";
-        snprintf(buff, 1024, "%s/%s.txt", prefix, outfile);
+        check_snprintf_error(snprintf(buff, 1024, "%s/%s.txt", prefix, outfile), "unable to create imagenet results filename");
         fp = fopen(buff, "w");
         imagenet = 1;
         classes = 200;
@@ -717,7 +742,7 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *out
         if (!outfile) outfile = "comp4_det_test_";
         fps = (FILE**) xcalloc(classes, sizeof(FILE *));
         for (j = 0; j < classes; ++j) {
-            snprintf(buff, 1024, "%s/%s%s.txt", prefix, outfile, names[j]);
+            check_snprintf_error(snprintf(buff, 1024, "%s/%s%s.txt", prefix, outfile, names[j]), "unable to create comp4_det test filename");
             fps[j] = fopen(buff, "w");
         }
     }
@@ -810,18 +835,18 @@ void validate_detector(char *datacfg, char *cfgfile, char *weightfile, char *out
     }
     if (coco) {
 #ifdef WIN32
-        fseek(fp, -3, SEEK_CUR);
+        check_fseek_error(fseek(fp, -3, SEEK_CUR), "can't seek -3 bdd file");
 #else
-        fseek(fp, -2, SEEK_CUR);
+        check_fseek_error(fseek(fp, -2, SEEK_CUR), "can't seek -2 bdd file");
 #endif
         fprintf(fp, "\n]\n");
     }
 
     if (bdd) {
 #ifdef WIN32
-        fseek(fp, -3, SEEK_CUR);
+        check_fseek_error(fseek(fp, -3, SEEK_CUR), "can't seek -3 bdd file");
 #else
-        fseek(fp, -2, SEEK_CUR);
+        check_fseek_error(fseek(fp, -2, SEEK_CUR), "can't seek -2 bdd file");
 #endif
         fprintf(fp, "\n]\n");
         fclose(fp);
@@ -1480,8 +1505,8 @@ void calc_anchors(char *datacfg, int num_of_clusters, int width, int height, int
             {
                 printf("\n\nWrong label: %s - j = %d, x = %f, y = %f, width = %f, height = %f \n",
                     labelpath, j, truth[j].x, truth[j].y, truth[j].w, truth[j].h);
-                sprintf(buff, "echo \"Wrong label: %s - j = %d, x = %f, y = %f, width = %f, height = %f\" >> bad_label.list",
-                    labelpath, j, truth[j].x, truth[j].y, truth[j].w, truth[j].h);
+                check_sprintf_error(sprintf(buff, "echo \"Wrong label: %s - j = %d, x = %f, y = %f, width = %f, height = %f\" >> bad_label.list",
+                    labelpath, j, truth[j].x, truth[j].y, truth[j].w, truth[j].h), "unable to create wrong label console message str");
                 system(buff);
             }
             if (truth[j].id >= classes) {
@@ -1561,15 +1586,15 @@ void calc_anchors(char *datacfg, int num_of_clusters, int width, int height, int
     char buff[1024];
     FILE* fwc = fopen("counters_per_class.txt", "wb");
     if (fwc) {
-        sprintf(buff, "counters_per_class = ");
+        check_sprintf_error(sprintf(buff, "counters_per_class = "), "unable to write counter in str");
         printf("\n%s", buff);
-        fwrite(buff, sizeof(char), strlen(buff), fwc);
+        check_fwrite_error(fwrite(buff, sizeof(char), strlen(buff), fwc), "unable to write counters in file");
         for (i = 0; i < classes; ++i) {
-            sprintf(buff, "%d", counter_per_class[i]);
+            check_sprintf_error(sprintf(buff, "%d", counter_per_class[i]), "unable to create counter_per_class str");
             printf("%s", buff);
-            fwrite(buff, sizeof(char), strlen(buff), fwc);
+            check_fwrite_error(fwrite(buff, sizeof(char), strlen(buff), fwc), "unable to write counter value");
             if (i < classes - 1) {
-                fwrite(", ", sizeof(char), 2, fwc);
+                check_fwrite_error(fwrite(", ", sizeof(char), 2, fwc), "unable to write counter value");
                 printf(", ");
             }
         }
@@ -1591,12 +1616,12 @@ void calc_anchors(char *datacfg, int num_of_clusters, int width, int height, int
         for (i = 0; i < num_of_clusters; ++i) {
             float anchor_w = anchors_data.centers.vals[i][0]; //centers->data.fl[i * 2];
             float anchor_h = anchors_data.centers.vals[i][1]; //centers->data.fl[i * 2 + 1];
-            if (width > 32) sprintf(buff, "%3.0f,%3.0f", anchor_w, anchor_h);
-            else sprintf(buff, "%2.4f,%2.4f", anchor_w, anchor_h);
+            if (width > 32) check_sprintf_error(sprintf(buff, "%3.0f,%3.0f", anchor_w, anchor_h), "unable to create anchors str");
+            else check_sprintf_error(sprintf(buff, "%2.4f,%2.4f", anchor_w, anchor_h),"unable to create anchors str");
             printf("%s", buff);
-            fwrite(buff, sizeof(char), strlen(buff), fw);
+            check_fwrite_error(fwrite(buff, sizeof(char), strlen(buff), fw), "unable to write anchors in file");
             if (i + 1 < num_of_clusters) {
-                fwrite(", ", sizeof(char), 2, fw);
+                check_fwrite_error(fwrite(", ", sizeof(char), 2, fw), "unable to write anchors value in file");
                 printf(", ");
             }
         }
@@ -1650,10 +1675,10 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
             error("fopen failed", DARKNET_LOC);
         }
         char *tmp = "[\n";
-        fwrite(tmp, sizeof(char), strlen(tmp), json_file);
+        check_fwrite_error(fwrite(tmp, sizeof(char), strlen(tmp), json_file), "unable to write in outfile");
     }
     int j;
-    float nms = .45;    // 0.4F
+    float nms = .45F;    // 0.4F
     while (1) {
         if (filename) {
             strncpy(input, filename, 256);
@@ -1712,12 +1737,11 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
         if (json_file) {
             if (json_buf) {
                 char *tmp = ", \n";
-                fwrite(tmp, sizeof(char), strlen(tmp), json_file);
+                check_fwrite_error(fwrite(tmp, sizeof(char), strlen(tmp), json_file), "unable to write delim in json file");
             }
             ++json_image_id;
             json_buf = detection_to_json(dets, nboxes, l.classes, names, json_image_id, input);
-
-            fwrite(json_buf, sizeof(char), strlen(json_buf), json_file);
+            check_fwrite_error(fwrite(json_buf, sizeof(char), strlen(json_buf), json_file), "unable to write detection to json file");
             free(json_buf);
         }
 
@@ -1740,8 +1764,9 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
                     }
                 }
                 if (class_id >= 0) {
-                    sprintf(buff, "%d %2.4f %2.4f %2.4f %2.4f\n", class_id, dets[i].bbox.x, dets[i].bbox.y, dets[i].bbox.w, dets[i].bbox.h);
-                    fwrite(buff, sizeof(char), strlen(buff), fw);
+                    check_sprintf_error(sprintf(buff, "%d %2.4f %2.4f %2.4f %2.4f\n", class_id, dets[i].bbox.x, dets[i].bbox.y, dets[i].bbox.w, dets[i].bbox.h),
+                                        "unable to create save labels string");
+                    check_fwrite_error(fwrite(buff, sizeof(char), strlen(buff), fw), "unable to write label values in outfile");
                 }
             }
             fclose(fw);
@@ -1761,7 +1786,7 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
 
     if (json_file) {
         char *tmp = "\n]";
-        fwrite(tmp, sizeof(char), strlen(tmp), json_file);
+        check_fwrite_error(fwrite(tmp, sizeof(char), strlen(tmp), json_file), "unable to write end of outfile");
         fclose(json_file);
     }
 
@@ -1858,7 +1883,7 @@ void draw_object(char *datacfg, char *cfgfile, char *weightfile, char *filename,
         int img_size = 1000;
         char windows_name[100];
         char *base = basecfg(cfgfile);
-        sprintf(windows_name, "chart_%s.png", base);
+        check_sprintf_error(sprintf(windows_name, "chart_%s.png", base), "unable to create chart filename");
         img = draw_train_chart(windows_name, max_img_loss, it_num, number_of_lines, img_size, dont_show, NULL);
 
         int iteration;
@@ -1966,9 +1991,9 @@ void run_detector(int argc, char **argv)
     char *json_file_output = find_char_arg(argc, argv, "-json_file_output", 0);
     char *outfile = find_char_arg(argc, argv, "-out", 0);
     char *prefix = find_char_arg(argc, argv, "-prefix", 0);
-    float thresh = find_float_arg(argc, argv, "-thresh", .25);    // 0.24
-    float iou_thresh = find_float_arg(argc, argv, "-iou_thresh", .5);    // 0.5 for mAP
-    float hier_thresh = find_float_arg(argc, argv, "-hier", .5);
+    float thresh = find_float_arg(argc, argv, "-thresh", .25F);    // 0.24F
+    float iou_thresh = find_float_arg(argc, argv, "-iou_thresh", .5F);    // 0.5F for mAP
+    float hier_thresh = find_float_arg(argc, argv, "-hier", .5F);
     int cam_index = find_int_arg(argc, argv, "-c", 0);
     int frame_skip = find_int_arg(argc, argv, "-s", 0);
     int num_of_clusters = find_int_arg(argc, argv, "-num_of_clusters", 5);
