@@ -1,0 +1,6 @@
+/content/darknet/custom_data/images/DJI_0011_JPG.rf.ae69c3af8ff170d71d775a99c8e3d5b1.jpg
+/content/darknet/custom_data/images/DJI_0024_JPG.rf.ef832ad5dcf77f947087f263230787e4.jpg
+/content/darknet/custom_data/images/DJI_0179_JPG.rf.bb08572af787380d95ca62b056f4772a.jpg
+/content/darknet/custom_data/images/DJI_0179_JPG.rf.fd6eca573ba33b9cbdac350d27caa8be.jpg
+/content/darknet/custom_data/images/DJI_0181_JPG.rf.7515cd0fe267cf19e134c62d1c8ac084.jpg
+/content/darknet/custom_data/images/DJI_0422_JPG.rf.e1a2b8cd5badad0830c37f690200823e.jpg
