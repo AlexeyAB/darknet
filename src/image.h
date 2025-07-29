@@ -33,6 +33,7 @@ void write_label(image a, int r, int c, image *characters, char *string, float *
 void draw_detections(image im, int num, float thresh, box *boxes, float **probs, char **names, image **labels, int classes);
 void draw_detections_v3(image im, detection *dets, int num, float thresh, char **names, image **alphabet, int classes, int ext_output);
 image image_distance(image a, image b);
+int compare_by_lefts(const void *a_ptr, const void *b_ptr);
 void scale_image(image m, float s);
 // image crop_image(image im, int dx, int dy, int w, int h);
 image random_crop_image(image im, int w, int h);
