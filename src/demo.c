@@ -97,7 +97,7 @@ void *detect_in_thread(void *ptr)
             this_thread_yield();
         }
 
-        layer l = net.layers[net.n - 1];
+        // layer l = net.layers[net.n - 1];
         float *X = det_s.data;
         //float *prediction =
         network_predict(net, X);

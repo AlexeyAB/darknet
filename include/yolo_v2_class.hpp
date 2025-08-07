@@ -515,7 +515,7 @@ public:
 
         if (err.rows == cur_bbox_vec.size() && status.rows == cur_bbox_vec.size())
         {
-            for (size_t i = 0; i < cur_bbox_vec.size(); ++i)
+            for (int i = 0; i < cur_bbox_vec.size(); ++i)
             {
                 cv::Point2f cur_key_pt = cur_pts_flow.at<cv::Point2f>(0, i);
                 cv::Point2f prev_key_pt = prev_pts_flow.at<cv::Point2f>(0, i);
@@ -573,7 +573,7 @@ class preview_boxes_t {
         preview_box_track_t() : track_id(0), obj_id(0), last_showed_frames_ago(frames_history), current_detection(false) {}
     };
     std::vector<preview_box_track_t> preview_box_track_id;
-    size_t const preview_box_size, bottom_offset;
+    int const preview_box_size, bottom_offset;
     bool const one_off_detections;
 public:
     preview_boxes_t(size_t _preview_box_size = 100, size_t _bottom_offset = 100, bool _one_off_detections = false) :
@@ -876,8 +876,8 @@ public:
             float time_wait = 0.5;    // 0.5 second
             if (track_id_state_id_time[state_id].track_id > -1)
             {
-                if ((result_vec_pred[state_id].x > img_size.width) ||
-                    (result_vec_pred[state_id].y > img_size.height))
+                if (((int)result_vec_pred[state_id].x > img_size.width) ||
+                    ((int)result_vec_pred[state_id].y > img_size.height))
                 {
                     track_id_state_id_time[state_id].track_id = -1;
                 }
@@ -897,7 +897,7 @@ public:
 
         float min_dist = std::numeric_limits<float>::max();
 
-        for (size_t i = 0; i < max_objects; ++i)
+        for (int i = 0; i < max_objects; ++i)
         {
             if (track_id_state_id_time[i].track_id > -1 && result_vec_pred[i].obj_id == find_box.obj_id && busy_vec[i] == false)
             {
@@ -987,7 +987,7 @@ public:
         clear_old_states();
         std::vector<bbox_t> result_vec;
 
-        for (size_t i = 0; i < max_objects; ++i)
+        for (int i = 0; i < max_objects; ++i)
         {
             tst_t tst = track_id_state_id_time[i];
             if (tst.track_id > -1) {
@@ -1022,7 +1022,7 @@ public:
         calc_dt();
         clear_old_states();
 
-        for (size_t i = 0; i < max_objects; ++i)
+        for (int i = 0; i < max_objects; ++i)
             track_id_state_id_time[i].detection_count--;
 
         std::vector<tst_t> tst_vec = find_state_ids(result_vec);
