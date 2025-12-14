@@ -8,7 +8,7 @@
 #include "image.h"
 #include "demo.h"
 #include "darknet.h"
-#ifdef WIN32
+#ifdef _WIN32
 #include <time.h>
 #include "gettimeofday.h"
 #else
@@ -187,7 +187,7 @@ void demo(char *cfgfile, char *weightfile, float thresh, float hier_thresh, int 
     }
 
     if (!cap) {
-#ifdef WIN32
+#ifdef _WIN32
         printf("Check that you have copied file opencv_ffmpeg340_64.dll to the same directory where is darknet.exe \n");
 #endif
         error("Couldn't connect to webcam.", DARKNET_LOC);

@@ -4,7 +4,7 @@
 #include "option_list.h"
 #include "blas.h"
 #include "classifier.h"
-#ifdef WIN32
+#ifdef _WIN32
 #include <time.h>
 #include "gettimeofday.h"
 #else

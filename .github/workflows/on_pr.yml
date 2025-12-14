@@ -103,6 +103,7 @@ jobs:
         mono $(./vcpkg/vcpkg fetch nuget | tail -n 1) sources add
         -Name "vcpkgbinarycache"
         -Source http://93.49.111.10:5555/v3/index.json
+        -AllowInsecureConnections
 
     - name: 'Build'
       shell: pwsh
@@ -139,6 +140,7 @@ jobs:
         mono $(./vcpkg/vcpkg fetch nuget | tail -n 1) sources add
         -Name "vcpkgbinarycache"
         -Source http://93.49.111.10:5555/v3/index.json
+        -AllowInsecureConnections
 
     - name: 'Build'
       shell: pwsh
@@ -170,6 +172,7 @@ jobs:
         mono $(./vcpkg/vcpkg fetch nuget | tail -n 1) sources add
         -Name "vcpkgbinarycache"
         -Source http://93.49.111.10:5555/v3/index.json
+        -AllowInsecureConnections
 
     - name: 'Build'
       shell: pwsh
@@ -278,6 +281,7 @@ jobs:
         mono $(./vcpkg/vcpkg fetch nuget | tail -n 1) sources add
         -Name "vcpkgbinarycache"
         -Source http://93.49.111.10:5555/v3/index.json
+        -AllowInsecureConnections
 
     - name: 'Setup'
       shell: bash
@@ -302,6 +306,7 @@ jobs:
         mono $(./vcpkg/vcpkg fetch nuget | tail -n 1) sources add
         -Name "vcpkgbinarycache"
         -Source http://93.49.111.10:5555/v3/index.json
+        -AllowInsecureConnections
 
     - name: 'Build'
       shell: pwsh
@@ -350,6 +355,7 @@ jobs:
         $(./vcpkg/vcpkg fetch nuget | tail -n 1) sources add
         -Name "vcpkgbinarycache"
         -Source http://93.49.111.10:5555/v3/index.json
+        -AllowInsecureConnections
 
     - name: 'Build'
       shell: pwsh
@@ -381,6 +387,7 @@ jobs:
         $(./vcpkg/vcpkg fetch nuget | tail -n 1) sources add
         -Name "vcpkgbinarycache"
         -Source http://93.49.111.10:5555/v3/index.json
+        -AllowInsecureConnections
 
     - name: 'Setup'
       shell: pwsh
@@ -402,6 +409,7 @@ jobs:
         $(./vcpkg/vcpkg fetch nuget | tail -n 1) sources add
         -Name "vcpkgbinarycache"
         -Source http://93.49.111.10:5555/v3/index.json
+        -AllowInsecureConnections
 
     - name: 'Build'
       shell: pwsh

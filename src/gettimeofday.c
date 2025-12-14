@@ -1,4 +1,4 @@
-#ifdef _MSC_VER
+#ifdef _WIN32
 #include "gettimeofday.h"
 
 int gettimeofday(struct timeval* tp, struct timezone* tzp)
@@ -40,4 +40,4 @@ int clock_gettime(int dummy, struct timespec* ct)
 
     return 0;
 }
-#endif
+#endif  // _WIN32

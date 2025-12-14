@@ -218,7 +218,7 @@ void validate_coco(char *cfgfile, char *weightfile)
             free_image(val_resized[t]);
         }
     }
-#ifdef WIN32
+#ifdef _WIN32
     fseek(fp, -3, SEEK_CUR);
 #else
     fseek(fp, -2, SEEK_CUR);
