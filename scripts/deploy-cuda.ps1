@@ -5,7 +5,7 @@ param (
   [switch]$DisableSilentMode = $false
 )
 
-Import-Module -Name $PSScriptRoot/utils.psm1 -Force
+Import-Module -Name $PSScriptRoot/CCM/utils.psm1 -Force
 
 $url = "https://developer.download.nvidia.com/compute/cuda/${cuda_version_full}/network_installers/cuda_${cuda_version_full}_windows_network.exe"
 

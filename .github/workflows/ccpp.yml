@@ -646,7 +646,7 @@ jobs:
 
     - name: 'Build'
       shell: pwsh
-      run: ${{ github.workspace }}/CCM/build.ps1 -DisableInteractive -DoNotUpdateTOOL -AdditionalBuildSetup "-DENABLE_CSHARP_WRAPPER:BOOL=ON"
+      run: ${{ github.workspace }}/CCM/build.ps1 -DisableInteractive -DoNotUpdateTOOL -DoNotUseNinja -AdditionalBuildSetup "-DENABLE_CSHARP_WRAPPER:BOOL=ON"
 
 
   win-intlibs-cuda:

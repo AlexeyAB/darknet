@@ -107,8 +107,8 @@ cd ..
 rm -rf "$temp_folder"
 echo "Building darknet"
 if [[ -v CUDA_PATH ]]; then
-  ./build.ps1 -UseVCPKG -EnableOPENCV -EnableCUDA -EnableCUDNN -DisableInteractive -DoNotUpdateTOOL
-  #./build.ps1 -UseVCPKG -EnableOPENCV -EnableCUDA -EnableCUDNN -EnableOPENCV_CUDA -DisableInteractive -DoNotUpdateTOOL
+  ./CCM/build.ps1 -UseVCPKG -EnableOPENCV -EnableCUDA -EnableCUDNN -DisableInteractive -DoNotUpdateTOOL
+  #./CCM/build.ps1 -UseVCPKG -EnableOPENCV -EnableCUDA -EnableCUDNN -EnableOPENCV_CUDA -DisableInteractive -DoNotUpdateTOOL
 else
-  ./build.ps1 -UseVCPKG -EnableOPENCV -DisableInteractive -DoNotUpdateTOOL
+  ./CCM/build.ps1 -UseVCPKG -EnableOPENCV -DisableInteractive -DoNotUpdateTOOL
 fi
