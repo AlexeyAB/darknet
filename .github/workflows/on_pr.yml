@@ -357,6 +357,9 @@ jobs:
         -Source http://93.49.111.10:5555/v3/index.json
         -AllowInsecureConnections
 
+    - name: Install NSIS
+      run: winget install --id NSIS.NSIS --accept-source-agreements --accept-package-agreements
+
     - name: 'Build'
       shell: pwsh
       run: ${{ github.workspace }}/build.ps1 -UseVCPKG -ForceLocalVCPKG -DoNotUpdateVCPKG -EnableOPENCV -DisableInteractive -DoNotUpdateTOOL -BuildInstaller

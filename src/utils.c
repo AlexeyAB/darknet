@@ -13,12 +13,14 @@
 #include <float.h>
 #include <limits.h>
 #include "darkunistd.h"
-#ifdef _WIN32
+#ifdef _MSC_VER
 #include "gettimeofday.h"
 #else
 #include <sys/time.h>
 #include <sys/stat.h>
+#ifndef _WIN32
 #include <execinfo.h>
+#endif
 #endif
 
 
@@ -340,7 +342,7 @@ void top_k(float *a, int n, int k, int *index)
 
 void log_backtrace()
 {
-#ifndef WIN32
+#ifndef _WIN32
     void * buffer[50];
     int count = backtrace(buffer, sizeof(buffer));
     char **symbols = backtrace_symbols(buffer, count);

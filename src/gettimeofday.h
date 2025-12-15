@@ -1,4 +1,4 @@
-#ifdef _WIN32
+#ifdef _MSC_VER
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winsock2.h>
@@ -35,4 +35,4 @@ int clock_gettime(int, struct timespec*);
 }
 #endif
 
-#endif  // _WIN32
+#endif  // _MSC_VER

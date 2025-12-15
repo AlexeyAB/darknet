@@ -6,7 +6,7 @@
 #include "assert.h"
 #include "classifier.h"
 #include "dark_cuda.h"
-#ifdef _WIN32
+#ifdef _MSC_VER
 #include <time.h>
 #include "gettimeofday.h"
 #else
