@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - name: Update apt & install dependencies
       run: |
@@ -72,6 +74,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - uses: lukka/get-cmake@latest
 
@@ -112,13 +116,15 @@ jobs:
         CUDA_PATH: "/usr/local/cuda"
         CUDA_TOOLKIT_ROOT_DIR: "/usr/local/cuda"
         LD_LIBRARY_PATH: "/usr/local/cuda/lib64:/usr/local/cuda/lib64/stubs:$LD_LIBRARY_PATH"
-      run: ${{ github.workspace }}/build.ps1 -UseVCPKG -DoNotUpdateVCPKG -EnableOPENCV -EnableCUDA -EnableCUDNN -DisableInteractive -DoNotUpdateTOOL -BuildInstaller
+      run: ${{ github.workspace }}/CCM/build.ps1 -UseVCPKG -DoNotUpdateVCPKG -EnableOPENCV -EnableCUDA -EnableCUDNN -DisableInteractive -DoNotUpdateTOOL -BuildInstaller
 
 
   ubuntu-vcpkg-opencv3:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - uses: lukka/get-cmake@latest
 
@@ -144,13 +150,15 @@ jobs:
 
     - name: 'Build'
       shell: pwsh
-      run: ${{ github.workspace }}/build.ps1 -UseVCPKG -DoNotUpdateVCPKG -EnableOPENCV -ForceOpenCVVersion 3 -DisableInteractive -DoNotUpdateTOOL
+      run: ${{ github.workspace }}/CCM/build.ps1 -UseVCPKG -DoNotUpdateVCPKG -EnableOPENCV -ForceOpenCVVersion 3 -DisableInteractive -DoNotUpdateTOOL
 
 
   ubuntu-vcpkg-opencv2:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - uses: lukka/get-cmake@latest
 
@@ -176,13 +184,15 @@ jobs:
 
     - name: 'Build'
       shell: pwsh
-      run: ${{ github.workspace }}/build.ps1 -UseVCPKG -DoNotUpdateVCPKG -EnableOPENCV -ForceOpenCVVersion 2 -DisableInteractive -DoNotUpdateTOOL
+      run: ${{ github.workspace }}/CCM/build.ps1 -UseVCPKG -DoNotUpdateVCPKG -EnableOPENCV -ForceOpenCVVersion 2 -DisableInteractive -DoNotUpdateTOOL
 
 
   ubuntu:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - name: Update apt & install dependencies
       run: |
@@ -202,13 +212,15 @@ jobs:
         CUDA_PATH: "/usr/local/cuda"
         CUDA_TOOLKIT_ROOT_DIR: "/usr/local/cuda"
         LD_LIBRARY_PATH: "/usr/local/cuda/lib64:/usr/local/cuda/lib64/stubs:$LD_LIBRARY_PATH"
-      run: ${{ github.workspace }}/build.ps1 -EnableOPENCV -DisableInteractive -DoNotUpdateTOOL
+      run: ${{ github.workspace }}/CCM/build.ps1 -EnableOPENCV -DisableInteractive -DoNotUpdateTOOL
 
 
   ubuntu-cuda:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - name: Update apt & install dependencies
       run: |
@@ -239,19 +251,21 @@ jobs:
         CUDA_PATH: "/usr/local/cuda"
         CUDA_TOOLKIT_ROOT_DIR: "/usr/local/cuda"
         LD_LIBRARY_PATH: "/usr/local/cuda/lib64:/usr/local/cuda/lib64/stubs:$LD_LIBRARY_PATH"
-      run: ${{ github.workspace }}/build.ps1 -EnableOPENCV -EnableCUDA -EnableCUDNN -DisableInteractive -DoNotUpdateTOOL
+      run: ${{ github.workspace }}/CCM/build.ps1 -EnableOPENCV -EnableCUDA -EnableCUDNN -DisableInteractive -DoNotUpdateTOOL
 
 
   ubuntu-no-ocv-cpp:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - uses: lukka/get-cmake@latest
 
     - name: 'Build'
       shell: pwsh
-      run: ${{ github.workspace }}/build.ps1 -ForceCPP -DisableInteractive -DoNotUpdateTOOL
+      run: ${{ github.workspace }}/CCM/build.ps1 -DisableInteractive -DoNotUpdateTOOL -AdditionalBuildSetup "-DBUILD_AS_CPP:BOOL=ON"
 
     - name: Test on data/dog.jpg
       shell: bash
@@ -264,6 +278,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - name: Update apt & install dependencies
       run: |
@@ -292,6 +308,8 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - name: Install dependencies
       run: brew install libomp yasm nasm pkg-config automake autoconf-archive mono
@@ -310,13 +328,15 @@ jobs:
 
     - name: 'Build'
       shell: pwsh
-      run: ${{ github.workspace }}/build.ps1 -UseVCPKG -DoNotUpdateVCPKG -EnableOPENCV -DisableInteractive -DoNotUpdateTOOL -BuildInstaller
+      run: ${{ github.workspace }}/CCM/build.ps1 -UseVCPKG -DoNotUpdateVCPKG -EnableOPENCV -DisableInteractive -DoNotUpdateTOOL -BuildInstaller
 
 
   osx:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - name: Install dependencies
       run: brew install opencv libomp
@@ -325,25 +345,29 @@ jobs:
 
     - name: 'Build'
       shell: pwsh
-      run: ${{ github.workspace }}/build.ps1 -EnableOPENCV -DisableInteractive -DoNotUpdateTOOL
+      run: ${{ github.workspace }}/CCM/build.ps1 -EnableOPENCV -DisableInteractive -DoNotUpdateTOOL
 
 
   osx-no-ocv-no-omp-cpp:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - uses: lukka/get-cmake@latest
 
     - name: 'Build'
       shell: pwsh
-      run: ${{ github.workspace }}/build.ps1 -ForceCPP -DisableInteractive -DoNotUpdateTOOL
+      run: ${{ github.workspace }}/CCM/build.ps1 -DisableInteractive -DoNotUpdateTOOL -AdditionalBuildSetup "-DBUILD_AS_CPP:BOOL=ON"
 
 
   win-vcpkg:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - uses: lukka/get-cmake@latest
 
@@ -362,25 +386,29 @@ jobs:
 
     - name: 'Build'
       shell: pwsh
-      run: ${{ github.workspace }}/build.ps1 -UseVCPKG -ForceLocalVCPKG -DoNotUpdateVCPKG -EnableOPENCV -DisableInteractive -DoNotUpdateTOOL -BuildInstaller
+      run: ${{ github.workspace }}/CCM/build.ps1 -UseVCPKG -ForceLocalVCPKG -DoNotUpdateVCPKG -EnableOPENCV -DisableInteractive -DoNotUpdateTOOL -BuildInstaller
 
 
   win-intlibs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - uses: lukka/get-cmake@latest
 
     - name: 'Build'
       shell: pwsh
-      run: ${{ github.workspace }}/build.ps1 -DisableInteractive -DoNotUpdateTOOL
+      run: ${{ github.workspace }}/CCM/build.ps1 -DisableInteractive -DoNotUpdateTOOL
 
 
   win-setup-ps1:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - name: 'Setup vcpkg and NuGet artifacts backend'
       shell: bash
@@ -401,6 +429,8 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - uses: lukka/get-cmake@latest
 
@@ -416,7 +446,7 @@ jobs:
 
     - name: 'Build'
       shell: pwsh
-      run: ${{ github.workspace }}/build.ps1 -UseVCPKG -ForceLocalVCPKG -DoNotUpdateVCPKG -ForceCPP -DisableInteractive -DoNotUpdateTOOL
+      run: ${{ github.workspace }}/CCM/build.ps1 -UseVCPKG -ForceLocalVCPKG -DoNotUpdateVCPKG -DisableInteractive -DoNotUpdateTOOL -AdditionalBuildSetup "-DBUILD_AS_CPP:BOOL=ON"
 
     - name: Download yolov4-tiny.weights
       run: curl.exe -L https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v4_pre/yolov4-tiny.weights -o ${{ github.workspace }}\yolov4-tiny.weights
@@ -428,18 +458,22 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - uses: lukka/get-cmake@latest
 
     - name: 'Build'
       shell: pwsh
-      run: ${{ github.workspace }}/build.ps1 -EnableCSharpWrapper -DisableInteractive -DoNotUpdateTOOL
+      run: ${{ github.workspace }}/CCM/build.ps1 -DisableInteractive -DoNotUpdateTOOL -AdditionalBuildSetup "-DENABLE_CSHARP_WRAPPER:BOOL=ON"
 
 
   win-intlibs-cuda:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
     - name: 'Install CUDA'
       run: ${{ github.workspace }}/scripts/deploy-cuda.ps1
 
@@ -451,25 +485,29 @@ jobs:
         CUDA_TOOLKIT_ROOT_DIR: "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.6"
         CUDACXX: "C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v12.6\\bin\\nvcc.exe"
       shell: pwsh
-      run: ${{ github.workspace }}/build.ps1 -EnableCUDA -DisableInteractive -DoNotUpdateTOOL
+      run: ${{ github.workspace }}/CCM/build.ps1 -EnableCUDA -DisableInteractive -DoNotUpdateTOOL
 
 
   win-powershell51:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - uses: lukka/get-cmake@latest
 
     - name: 'Build'
       shell: powershell
-      run: ${{ github.workspace }}/build.ps1 -DisableInteractive -DoNotUpdateTOOL
+      run: ${{ github.workspace }}/CCM/build.ps1 -DisableInteractive -DoNotUpdateTOOL
 
 
   mingw:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'true'
 
     - uses: lukka/get-cmake@latest
 
