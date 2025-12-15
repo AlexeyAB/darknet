@@ -386,7 +386,7 @@ The `CMakeLists.txt` will attempt to find installed optional dependencies like C
 To update CMake on Ubuntu, it's better to follow guide here: https://apt.kitware.com/ or https://cmake.org/download/
 
 ```bash
-git clone https://github.com/AlexeyAB/darknet
+git clone https://github.com/AlexeyAB/darknet --recurse-submodules
 cd darknet
 mkdir build_release
 cd build_release
@@ -403,9 +403,9 @@ Install powershell for your OS (Linux or MacOS) ([guide here](https://docs.micro
 Open PowerShell type these commands
 
 ```PowerShell
-git clone https://github.com/AlexeyAB/darknet
+git clone https://github.com/AlexeyAB/darknet --recurse-submodules
 cd darknet
-./build.ps1 -UseVCPKG -EnableOPENCV -EnableCUDA -EnableCUDNN
+./CCM/build.ps1 -UseVCPKG -EnableOPENCV -EnableCUDA -EnableCUDNN
 ```
 
 - remove options like `-EnableCUDA` or `-EnableCUDNN` if you are not interested into
@@ -463,9 +463,9 @@ This is the recommended approach to build Darknet on Windows.
 
 ```PowerShell
 Set-ExecutionPolicy unrestricted -Scope CurrentUser -Force
-git clone https://github.com/AlexeyAB/darknet
+git clone https://github.com/AlexeyAB/darknet --recurse-submodules
 cd darknet
-.\build.ps1 -UseVCPKG -EnableOPENCV -EnableCUDA -EnableCUDNN
+.\CCM\build.ps1 -UseVCPKG -EnableOPENCV -EnableCUDA -EnableCUDNN
 ```
 
 (add option `-EnableOPENCV_CUDA` if you want to build OpenCV with CUDA support - very slow to build! - or remove options like `-EnableCUDA` or `-EnableCUDNN` if you are not interested in them). If you open the `build.ps1` script at the beginning you will find all available switches.
