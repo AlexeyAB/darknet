@@ -342,7 +342,7 @@ void top_k(float *a, int n, int k, int *index)
 
 void log_backtrace()
 {
-#ifndef _WIN32
+#if !defined(WIN32) && !defined(__ANDROID__)
     void * buffer[50];
     int count = backtrace(buffer, sizeof(buffer));
     char **symbols = backtrace_symbols(buffer, count);
