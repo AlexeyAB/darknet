@@ -4,7 +4,7 @@ param (
   [switch]$InstallCUDA = $false
 )
 
-Import-Module -Name $PSScriptRoot/CCM/utils.psm1 -Force
+Import-Module -Name $PSScriptRoot/../CCM/utils.psm1 -Force
 
 if ($null -eq (Get-Command "choco.exe" -ErrorAction SilentlyContinue)) {
   # Download and install Chocolatey
