@@ -1618,7 +1618,7 @@ void calc_anchors(char *datacfg, int num_of_clusters, int width, int height, int
 
 
 void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filename, float thresh,
-    float hier_thresh, int dont_show, int ext_output, int save_labels, char *outfile, int letter_box, int benchmark_layers)
+    float hier_thresh, int dont_show, int ext_output, int save_labels, char *outfile, int letter_box, int benchmark_layers, int save_labels_actual)
 {
     list *options = read_data_cfg(datacfg);
     char *name_list = option_find_str(options, "names", "data/names.list");
@@ -1722,29 +1722,10 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
         }
 
         // pseudo labeling concept - fast.ai
-        if (save_labels)
-        {
-            char labelpath[4096];
-            replace_image_to_label(input, labelpath);
-
-            FILE* fw = fopen(labelpath, "wb");
-            int i;
-            for (i = 0; i < nboxes; ++i) {
-                char buff[1024];
-                int class_id = -1;
-                float prob = 0;
-                for (j = 0; j < l.classes; ++j) {
-                    if (dets[i].prob[j] > thresh && dets[i].prob[j] > prob) {
-                        prob = dets[i].prob[j];
-                        class_id = j;
-                    }
-                }
-                if (class_id >= 0) {
-                    sprintf(buff, "%d %2.4f %2.4f %2.4f %2.4f\n", class_id, dets[i].bbox.x, dets[i].bbox.y, dets[i].bbox.w, dets[i].bbox.h);
-                    fwrite(buff, sizeof(char), strlen(buff), fw);
-                }
-            }
-            fclose(fw);
+        if (save_labels){
+            save_outputs(input, nboxes, dets, thresh, l.classes);
+        } else if(save_labels_actual){
+            save_outputs_actual(im, input, nboxes, dets, thresh, names);
         }
 
         free_detections(dets, nboxes);
@@ -1978,6 +1959,7 @@ void run_detector(int argc, char **argv)
     // and for recall mode (extended output table-like format with results for best_class fit)
     int ext_output = find_arg(argc, argv, "-ext_output");
     int save_labels = find_arg(argc, argv, "-save_labels");
+    int save_labels_actual = find_arg(argc, argv, "-save_labels_actual");
     char* chart_path = find_char_arg(argc, argv, "-chart", 0);
     // While training, decide after how many epochs mAP will be calculated. Default value is 4 which means the mAP will be calculated after each 4 epochs
     int mAP_epochs = find_int_arg(argc, argv, "-mAP_epochs", 4);
@@ -2018,7 +2000,7 @@ void run_detector(int argc, char **argv)
         if (strlen(weights) > 0)
             if (weights[strlen(weights) - 1] == 0x0d) weights[strlen(weights) - 1] = 0;
     char *filename = (argc > 6) ? argv[6] : 0;
-    if (0 == strcmp(argv[2], "test")) test_detector(datacfg, cfg, weights, filename, thresh, hier_thresh, dont_show, ext_output, save_labels, outfile, letter_box, benchmark_layers);
+    if (0 == strcmp(argv[2], "test")) test_detector(datacfg, cfg, weights, filename, thresh, hier_thresh, dont_show, ext_output, save_labels, outfile, letter_box, benchmark_layers, save_labels_actual);
     else if (0 == strcmp(argv[2], "train")) train_detector(datacfg, cfg, weights, gpus, ngpus, clear, dont_show, calc_map, thresh, iou_thresh, mjpeg_port, show_imgs, benchmark_layers, chart_path, mAP_epochs);
     else if (0 == strcmp(argv[2], "valid")) validate_detector(datacfg, cfg, weights, outfile);
     else if (0 == strcmp(argv[2], "recall")) validate_detector_recall(datacfg, cfg, weights);

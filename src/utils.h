@@ -2,6 +2,9 @@
 #define UTILS_H
 #include "darknet.h"
 #include "list.h"
+#include "box.h"
+#include "image.h"
+
 
 #include <stdio.h>
 #include <time.h>
@@ -44,6 +47,8 @@ int read_int(int fd);
 void write_int(int fd, int n);
 void read_all(int fd, char *buffer, size_t bytes);
 void write_all(int fd, char *buffer, size_t bytes);
+void save_outputs(const char* input, int nboxes, detection *dets, float thresh, int classes);
+void save_outputs_actual(image im, const char* input, int nboxes, detection *dets, float thresh, char **names);
 int read_all_fail(int fd, char *buffer, size_t bytes);
 int write_all_fail(int fd, char *buffer, size_t bytes);
 LIB_API void find_replace(const char* str, char* orig, char* rep, char* output);

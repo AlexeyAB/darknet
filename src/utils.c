@@ -224,6 +224,61 @@ void find_replace(const char* str, char* orig, char* rep, char* output)
     free(buffer);
 }
 
+void save_outputs(const char* input, int nboxes, detection *dets, float thresh, int classes){
+    char labelpath[4096];
+    replace_image_to_label(input, labelpath);
+
+    FILE* fw = fopen(labelpath, "wb");
+    int i,j;
+    for (i = 0; i < nboxes; ++i) {
+        char buff[1024];
+        int class_id = -1;
+        float prob = 0;
+        for (j = 0; j < classes; ++j) {
+            if (dets[i].prob[j] > thresh && dets[i].prob[j] > prob) {
+                prob = dets[i].prob[j];
+                class_id = j;
+            }
+        }
+        if (class_id >= 0) {
+            sprintf(buff, "1 -%d %2.4f %2.4f %2.4f %2.4f\n", class_id, dets[i].bbox.x, dets[i].bbox.y, dets[i].bbox.w, dets[i].bbox.h);
+            fwrite(buff, sizeof(char), strlen(buff), fw);
+        }
+    }
+    fclose(fw);
+}
+
+void save_outputs_actual(image im, const char* input, int nboxes, detection *dets, float thresh, char **names){
+    char labelpath[4096];
+    replace_image_to_label(input, labelpath);
+
+    int selected_detections_num;
+    detection_with_class* selected_detections = get_actual_detections(dets, nboxes, thresh, &selected_detections_num, names);
+
+    qsort(selected_detections, selected_detections_num, sizeof(*selected_detections), compare_by_lefts);
+
+
+    FILE* fw = fopen(labelpath, "wb");
+    int i,j;
+    for (i = 0; i < selected_detections_num; ++i) {
+        char buff[1024];
+
+        const int best_class = selected_detections[i].best_class;
+
+        sprintf(buff, "%i %.0f %4.0f %4.0f %4.0f %4.0f \n",
+                best_class, // best class id
+                (selected_detections[i].det.prob[best_class] * 100), // probability
+                round((selected_detections[i].det.bbox.x - selected_detections[i].det.bbox.w / 2)*im.w), // left_x
+                round((selected_detections[i].det.bbox.y - selected_detections[i].det.bbox.h / 2)*im.h), // top_y
+                round(selected_detections[i].det.bbox.w*im.w), // width
+                round(selected_detections[i].det.bbox.h*im.h)); // height
+        fwrite(buff, sizeof(char), strlen(buff), fw);
+    }
+    fclose(fw);
+    free(selected_detections);
+
+}
+
 void trim(char *str)
 {
     char* buffer = (char*)xcalloc(8192, sizeof(char));
