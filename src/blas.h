@@ -57,23 +57,23 @@ void upsample_cpu(float *in, int w, int h, int c, int batch, int stride, int for
 void softmax_cpu(float *input, int n, int batch, int batch_offset, int groups, int group_offset, int stride, float temp, float *output);
 void softmax_x_ent_cpu(int n, float *pred, float *truth, float *delta, float *error);
 void constrain_cpu(int size, float ALPHA, float *X);
-void fix_nan_and_inf_cpu(float *input, size_t size);
+void fix_nan_and_inf_cpu(float *input, int size);
 
 
-int check_sim(size_t i, size_t j, contrastive_params *contrast_p, int contrast_p_size);
-float find_sim(size_t i, size_t j, contrastive_params *contrast_p, int contrast_p_size);
-float find_P_constrastive(size_t i, size_t j, contrastive_params *contrast_p, int contrast_p_size);
-float P_constrastive_f_det(size_t il, int *labels, float **z, unsigned int feature_size, float temperature, contrastive_params *contrast_p, int contrast_p_size);
-float P_constrastive_f(size_t i, size_t l, int *labels, float **z, unsigned int feature_size, float temperature, contrastive_params *contrast_p, int contrast_p_size);
-void grad_contrastive_loss_positive_f(size_t i, int *class_ids, int *labels, size_t num_of_samples, float **z, unsigned int feature_size, float temperature, float *delta, int wh, contrastive_params *contrast_p, int contrast_p_size);
-void grad_contrastive_loss_negative_f(size_t i, int *class_ids, int *labels, size_t num_of_samples, float **z, unsigned int feature_size, float temperature, float *delta, int wh, contrastive_params *contrast_p, int contrast_p_size, int neg_max);
+int check_sim(int i, int j, contrastive_params *contrast_p, int contrast_p_size);
+float find_sim(int i, int j, contrastive_params *contrast_p, int contrast_p_size);
+float find_P_constrastive(int i, int j, contrastive_params *contrast_p, int contrast_p_size);
+float P_constrastive_f_det(int il, int *labels, float **z, int feature_size, float temperature, contrastive_params *contrast_p, int contrast_p_size);
+float P_constrastive_f(int i, int l, int *labels, float **z, int feature_size, float temperature, contrastive_params *contrast_p, int contrast_p_size);
+void grad_contrastive_loss_positive_f(int i, int *class_ids, int *labels, int num_of_samples, float **z, int feature_size, float temperature, float *delta, int wh, contrastive_params *contrast_p, int contrast_p_size);
+void grad_contrastive_loss_negative_f(int i, int *class_ids, int *labels, int num_of_samples, float **z, int feature_size, float temperature, float *delta, int wh, contrastive_params *contrast_p, int contrast_p_size, int neg_max);
 
 void get_embedding(float *src, int src_w, int src_h, int src_c, int embedding_size, int cur_w, int cur_h, int cur_n, int cur_b, float *dst);
-float math_vector_length(float *A, unsigned int feature_size);
-float cosine_similarity(float *A, float *B, unsigned int feature_size);
-float P_constrastive(size_t i, size_t l, int *labels, size_t num_of_samples, float **z, unsigned int feature_size, float temperature, float *cos_sim, float *exp_cos_sim);
-void grad_contrastive_loss_positive(size_t i, int *labels, size_t num_of_samples, float **z, unsigned int feature_size, float temperature, float *cos_sim, float *p_constrastive, float *delta, int wh);
-void grad_contrastive_loss_negative(size_t i, int *labels, size_t num_of_samples, float **z, unsigned int feature_size, float temperature, float *cos_sim, float *p_constrastive, float *delta, int wh);
+float math_vector_length(float *A, int feature_size);
+float cosine_similarity(float *A, float *B, int feature_size);
+float P_constrastive(int i, int l, int *labels, int num_of_samples, float **z, int feature_size, float temperature, float *cos_sim, float *exp_cos_sim);
+void grad_contrastive_loss_positive(int i, int *labels, int num_of_samples, float **z, int feature_size, float temperature, float *cos_sim, float *p_constrastive, float *delta, int wh);
+void grad_contrastive_loss_negative(int i, int *labels, int num_of_samples, float **z, int feature_size, float temperature, float *cos_sim, float *p_constrastive, float *delta, int wh);
 
 
 #ifdef GPU
@@ -171,7 +171,7 @@ void rotate_weights_gpu(const float *src_weight_gpu, float *weight_deform_gpu, i
 void reduce_and_expand_array_gpu(const float *src_gpu, float *dst_gpu, int size, int groups);
 void expand_array_gpu(const float *src_gpu, float *dst_gpu, int size, int groups);
 void mult_inverse_array_gpu(const float *src_gpu, float *dst_gpu, int size, float eps, float divider, float clip, float abs_add);
-void P_constrastive_f_det_gpu(int *labels, unsigned int feature_size, float temperature, contrastive_params *contrast_p, const int contrast_p_size);
+void P_constrastive_f_det_gpu(int *labels, int feature_size, float temperature, contrastive_params *contrast_p, const int contrast_p_size);
 void coord_conv_gpu(float *dst, int size, int w, int h, int chan, int b, int type);
 
 void forward_implicit_gpu(int batch, int nweights, float *weight_gpu, float *output_gpu);

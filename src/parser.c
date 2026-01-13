@@ -1180,7 +1180,7 @@ void parse_net_options(list *options, network *net)
     net->loss_scale = option_find_float_quiet(options, "loss_scale", 1);
     net->dynamic_minibatch = option_find_int_quiet(options, "dynamic_minibatch", 0);
     net->optimized_memory = option_find_int_quiet(options, "optimized_memory", 0);
-    net->workspace_size_limit = (size_t)1024*1024 * option_find_float_quiet(options, "workspace_size_limit_MB", 1024);  // 1024 MB by default
+    net->workspace_size_limit = 1024*1024 * option_find_float_quiet(options, "workspace_size_limit_MB", 1024);  // 1024 MB by default
 
 
     net->adam = option_find_int_quiet(options, "adam", 0);
@@ -1361,7 +1361,7 @@ network parse_network_cfg_custom(char *filename, int batch, int time_steps)
 #ifdef GPU
     printf("net.optimized_memory = %d \n", net.optimized_memory);
     if (net.optimized_memory >= 2 && params.train) {
-        pre_allocate_pinned_memory((size_t)1024 * 1024 * 1024 * 8);   // pre-allocate 8 GB CPU-RAM for pinned memory
+        pre_allocate_pinned_memory(1024L * 1024 * 1024 * 8);   // pre-allocate 8 GB CPU-RAM for pinned memory
     }
 #endif  // GPU
 
@@ -1383,9 +1383,9 @@ network parse_network_cfg_custom(char *filename, int batch, int time_steps)
     int avg_outputs = 0;
     int avg_counter = 0;
     float bflops = 0;
-    size_t workspace_size = 0;
-    size_t max_inputs = 0;
-    size_t max_outputs = 0;
+    int workspace_size = 0;
+    int max_inputs = 0;
+    int max_outputs = 0;
     int receptive_w = 1, receptive_h = 1;
     int receptive_w_scale = 1, receptive_h_scale = 1;
     const int show_receptive_field = option_find_float_quiet(options, "show_receptive_field", 0);
@@ -1711,7 +1711,7 @@ network parse_network_cfg_custom(char *filename, int batch, int time_steps)
             layer l = net.layers[k];
             // delta GPU-memory optimization: net.optimized_memory == 1
             if (!l.keep_delta_gpu) {
-                const size_t delta_size = l.outputs*l.batch; // l.steps
+                const int delta_size = l.outputs*l.batch; // l.steps
                 if (net.max_delta_gpu_size < delta_size) {
                     net.max_delta_gpu_size = delta_size;
                     if (net.global_delta_gpu) cuda_free(net.global_delta_gpu);
@@ -1758,7 +1758,7 @@ network parse_network_cfg_custom(char *filename, int batch, int time_steps)
     {
         int size = get_network_input_size(net) * net.batch;
         net.input_state_gpu = cuda_make_array(0, size);
-        if (cudaSuccess == cudaHostAlloc(&net.input_pinned_cpu, size * sizeof(float), cudaHostRegisterMapped)) net.input_pinned_cpu_flag = 1;
+        if (cudaSuccess == cudaHostAlloc((void**)&net.input_pinned_cpu, size * sizeof(float), cudaHostRegisterMapped)) net.input_pinned_cpu_flag = 1;
         else {
             cudaGetLastError(); // reset CUDA-error
             net.input_pinned_cpu = (float*)xcalloc(size, sizeof(float));
@@ -1890,7 +1890,6 @@ void save_implicit_weights(layer l, FILE *fp)
         //printf("\n pull_implicit_layer \n");
     }
 #endif
-    int i;
     //if(l.weight_updates) for (i = 0; i < l.nweights; ++i) printf(" %f, ", l.weight_updates[i]);
     //printf(" l.nweights = %d - update \n", l.nweights);
     //for (i = 0; i < l.nweights; ++i) printf(" %f, ", l.weights[i]);

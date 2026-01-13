@@ -433,24 +433,24 @@ LIB_API std::vector<bbox_t> Detector::tracking_id(std::vector<bbox_t> cur_bbox_v
         if (i.size() > 0) prev_track_id_present = true;
 
     if (!prev_track_id_present) {
-        for (size_t i = 0; i < cur_bbox_vec.size(); ++i)
+        for (int i = 0; i < (int)cur_bbox_vec.size(); ++i)
             cur_bbox_vec[i].track_id = det_gpu.track_id[cur_bbox_vec[i].obj_id]++;
         prev_bbox_vec_deque.push_front(cur_bbox_vec);
-        if (prev_bbox_vec_deque.size() > frames_story) prev_bbox_vec_deque.pop_back();
+        if ((int)prev_bbox_vec_deque.size() > frames_story) prev_bbox_vec_deque.pop_back();
         return cur_bbox_vec;
     }
 
-    std::vector<unsigned int> dist_vec(cur_bbox_vec.size(), std::numeric_limits<unsigned int>::max());
+    std::vector<int> dist_vec(cur_bbox_vec.size(), std::numeric_limits<int>::max());
 
     for (auto &prev_bbox_vec : prev_bbox_vec_deque) {
         for (auto &i : prev_bbox_vec) {
             int cur_index = -1;
-            for (size_t m = 0; m < cur_bbox_vec.size(); ++m) {
+            for (int m = 0; m < (int)cur_bbox_vec.size(); ++m) {
                 bbox_t const& k = cur_bbox_vec[m];
                 if (i.obj_id == k.obj_id) {
                     float center_x_diff = (float)(i.x + i.w/2) - (float)(k.x + k.w/2);
                     float center_y_diff = (float)(i.y + i.h/2) - (float)(k.y + k.h/2);
-                    unsigned int cur_dist = sqrt(center_x_diff*center_x_diff + center_y_diff*center_y_diff);
+                    int cur_dist = sqrt(center_x_diff*center_x_diff + center_y_diff*center_y_diff);
                     if (cur_dist < max_dist && (k.track_id == 0 || dist_vec[m] > cur_dist)) {
                         dist_vec[m] = cur_dist;
                         cur_index = m;
@@ -475,7 +475,7 @@ LIB_API std::vector<bbox_t> Detector::tracking_id(std::vector<bbox_t> cur_bbox_v
 
     if (change_history) {
         prev_bbox_vec_deque.push_front(cur_bbox_vec);
-        if (prev_bbox_vec_deque.size() > frames_story) prev_bbox_vec_deque.pop_back();
+        if ((int)prev_bbox_vec_deque.size() > frames_story) prev_bbox_vec_deque.pop_back();
     }
 
     return cur_bbox_vec;

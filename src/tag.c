@@ -101,12 +101,12 @@ void test_tag(char *cfgfile, char *weightfile, char *filename)
     char **names = get_labels("data/tags.txt");
     clock_t time;
     int indexes[10];
-    char buff[256];
+    char buff[256] = { 0 };
     char *input = buff;
     int size = net.w;
     while(1){
         if(filename){
-            strncpy(input, filename, 256);
+            strncpy(input, filename, 255);
         }else{
             printf("Enter Image Path: ");
             fflush(stdout);

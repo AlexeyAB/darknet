@@ -87,19 +87,19 @@ void train_coco(char *cfgfile, char *weightfile)
 
         printf("%d: %f, %f avg, %f rate, %lf seconds, %d images\n", i, loss, avg_loss, get_current_rate(net), sec(clock()-time), i*imgs);
         if(i%1000==0 || (i < 1000 && i%100 == 0)){
-            char buff[256];
-            sprintf(buff, "%s/%s_%d.weights", backup_directory, base, i);
+            char buff[256] = { 0 };
+            snprintf(buff, sizeof buff, "%s/%s_%d.weights", backup_directory, base, i);
             save_weights(net, buff);
         }
         if(i%100==0){
-            char buff[256];
-            sprintf(buff, "%s/%s.backup", backup_directory, base);
+            char buff[256] = { 0 };
+            snprintf(buff, sizeof buff, "%s/%s.backup", backup_directory, base);
             save_weights(net, buff);
         }
         free_data(train);
     }
-    char buff[256];
-    sprintf(buff, "%s/%s_final.weights", backup_directory, base);
+    char buff[256] = { 0 };
+    snprintf(buff, sizeof buff, "%s/%s_final.weights", backup_directory, base);
     save_weights(net, buff);
 }
 
@@ -245,7 +245,7 @@ void validate_coco_recall(char *cfgfile, char *weightfile)
     fprintf(stderr, "Learning Rate: %g, Momentum: %g, Decay: %g\n", net.learning_rate, net.momentum, net.decay);
     srand(time(0));
 
-    char *base = "results/comp4_det_test_";
+    //char *base = "results/comp4_det_test_";
     list* plist = get_paths("data/voc/test/2007_test.txt");
     char **paths = (char **)list_to_array(plist);
 
@@ -343,7 +343,7 @@ void test_coco(char *cfgfile, char *weightfile, char *filename, float thresh)
     srand(2222222);
     float nms = .4;
     clock_t time;
-    char buff[256];
+    char buff[256] = { 0 };
     char *input = buff;
     int j;
     box* boxes = (box*)xcalloc(l.side * l.side * l.n, sizeof(box));
@@ -353,11 +353,11 @@ void test_coco(char *cfgfile, char *weightfile, char *filename, float thresh)
     }
     while(1){
         if(filename){
-            strncpy(input, filename, 256);
+            strncpy(input, filename, sizeof buff - 1);
         } else {
             printf("Enter Image Path: ");
             fflush(stdout);
-            input = fgets(input, 256, stdin);
+            input = fgets(input, sizeof buff - 1, stdin);
             if(!input) break;
             strtok(input, "\n");
         }

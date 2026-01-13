@@ -553,7 +553,7 @@ struct layer {
 
     tree *softmax_tree;
 
-    size_t workspace_size;
+    ssize_t workspace_size;
 
 //#ifdef GPU
     int *indexes_gpu;
@@ -704,7 +704,7 @@ typedef enum {
 typedef struct network {
     int n;
     int batch;
-    uint64_t *seen;
+    int64_t *seen;
     float *badlabels_reject_threshold;
     float *delta_rolling_max;
     float *delta_rolling_avg;
@@ -818,8 +818,8 @@ typedef struct network {
     float **truth_gpu;
     float **input16_gpu;
     float **output16_gpu;
-    size_t *max_input16_size;
-    size_t *max_output16_size;
+    ssize_t *max_input16_size;
+    ssize_t *max_output16_size;
     int wait_stream;
 
     void *cuda_graph;
@@ -829,11 +829,11 @@ typedef struct network {
 
     float *global_delta_gpu;
     float *state_delta_gpu;
-    size_t max_delta_gpu_size;
+    ssize_t max_delta_gpu_size;
 //#endif  // GPU
     int optimized_memory;
     int dynamic_minibatch;
-    size_t workspace_size_limit;
+    ssize_t workspace_size_limit;
 } network;
 
 // network.h

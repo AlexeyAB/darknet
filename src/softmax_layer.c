@@ -239,7 +239,7 @@ void forward_contrastive_layer(contrastive_layer l, network_state state)
                 for (w = 0; w < l.w; ++w)
                 {
                     // find truth with max prob (only 1 label even if mosaic is used)
-                    float max_truth = 0;
+                    // float max_truth = 0;
                     int n;
                     for (n = 0; n < l.classes; ++n) {
                         const float truth_prob = state.truth[b*l.classes + n];
@@ -248,7 +248,7 @@ void forward_contrastive_layer(contrastive_layer l, network_state state)
                         if (truth_prob > truth_thresh)
                         {
                             //printf(" truth_prob = %f, max_truth = %f, n = %d; ", truth_prob, max_truth, n);
-                            max_truth = truth_prob;
+                            // max_truth = truth_prob;
                             l.labels[b] = n;
                         }
                     }
@@ -285,8 +285,8 @@ void forward_contrastive_layer(contrastive_layer l, network_state state)
     int b2, n2, h2, w2;
     int contrast_p_index = 0;
 
-    const size_t step = l.batch*l.n*l.h*l.w;
-    size_t contrast_p_size = step;
+    const int step = l.batch*l.n*l.h*l.w;
+    int contrast_p_size = step;
     if (!l.detection) contrast_p_size = l.batch*l.batch;
     contrastive_params *contrast_p = (contrastive_params*)xcalloc(contrast_p_size, sizeof(contrastive_params));
 
@@ -319,7 +319,7 @@ void forward_contrastive_layer(contrastive_layer l, network_state state)
                                     const int time_step_j = b2 / mini_batch;
                                     if (time_step_i != time_step_j) continue;
 
-                                    const size_t step = l.batch*l.n*l.h*l.w;
+                                    const int step = l.batch*l.n*l.h*l.w;
 
                                     const float sim = cosine_similarity(z[z_index], z[z_index2], l.embedding_size);
                                     const float exp_sim = expf(sim / l.temperature);
@@ -412,7 +412,7 @@ void forward_contrastive_layer(contrastive_layer l, network_state state)
     */
 
 
-    const size_t contr_size = contrast_p_index;
+    const int contr_size = contrast_p_index;
 
     if (l.detection) {
 #ifdef GPU

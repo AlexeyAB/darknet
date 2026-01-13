@@ -94,7 +94,14 @@ NVCC=nvcc
 OPTS=-Ofast
 LDFLAGS= -lm -pthread
 COMMON= -Iinclude/ -I3rdparty/stb/include
-CFLAGS=-Wall -Wfatal-errors -Wno-unused-result -Wno-unknown-pragmas -fPIC -rdynamic
+CFLAGS=-Wall -Wno-unused-parameter -Wno-unknown-pragmas -fPIC -rdynamic
+
+ifeq ($(USE_CPP), 1)
+# C is not C++
+CFLAGS+=-fpermissive -Wno-write-strings
+else
+CFLAGS+=-Wextra
+endif
 
 ifeq ($(DEBUG), 1)
 #OPTS= -O0 -g

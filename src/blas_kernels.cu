@@ -2378,7 +2378,7 @@ __global__ void P_constrastive_f_det_kernel(int *labels, unsigned int feature_si
 }
 
 
-extern "C" void P_constrastive_f_det_gpu(int *labels, unsigned int feature_size, float temperature, contrastive_params *contrast_p, const int contrast_p_size)
+extern "C" void P_constrastive_f_det_gpu(int *labels, int feature_size, float temperature, contrastive_params *contrast_p, const int contrast_p_size)
 {
     const int block_size = BLOCK;
     const int num_blocks = get_number_of_blocks(contrast_p_size, block_size);

@@ -81,11 +81,11 @@ void test_super(char *cfgfile, char *weightfile, char *filename)
     srand(2222222);
 
     clock_t time;
-    char buff[256];
+    char buff[256] = { 0 };
     char *input = buff;
     while(1){
         if(filename){
-            strncpy(input, filename, 256);
+            strncpy(input, filename, 255);
         }else{
             printf("Enter Image Path: ");
             fflush(stdout);

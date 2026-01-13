@@ -9,6 +9,15 @@
 char *get_activation_string(ACTIVATION a)
 {
     switch(a){
+	case RELU6:
+	case SWISH:
+	case HARD_MISH:
+	case NORM_CHAN:
+	case NORM_CHAN_SOFTMAX:
+	case NORM_CHAN_SOFTMAX_MAXVAL:
+	case MISH:
+	    assert(0);
+
         case LOGISTIC:
             return "logistic";
         case LOGGY:
@@ -77,6 +86,14 @@ ACTIVATION get_activation(char *s)
 float activate(float x, ACTIVATION a)
 {
     switch(a){
+	case RELU6:
+	case SWISH:
+	case HARD_MISH:
+	case NORM_CHAN:
+	case NORM_CHAN_SOFTMAX:
+	case NORM_CHAN_SOFTMAX_MAXVAL:
+	case MISH:
+	    assert(0);
         case LINEAR:
             return linear_activate(x);
         case LOGISTIC:
@@ -308,6 +325,10 @@ void gradient_array_normalize_channels(float *x, const int n, int batch, int cha
 float gradient(float x, ACTIVATION a)
 {
     switch(a){
+	case SWISH:
+	case HARD_MISH:
+	case MISH:
+	    assert(0);
         case LINEAR:
             return linear_gradient(x);
         case LOGISTIC:
@@ -321,9 +342,10 @@ float gradient(float x, ACTIVATION a)
         case NORM_CHAN:
             //return relu_gradient(x);
         case NORM_CHAN_SOFTMAX_MAXVAL:
-            //...
+            // fallthrough
         case NORM_CHAN_SOFTMAX:
             error("Error: should be used custom NORM_CHAN or NORM_CHAN_SOFTMAX-function for gradient", DARKNET_LOC);
+	    break;
         case ELU:
             return elu_gradient(x);
         case SELU:

@@ -211,7 +211,10 @@ void find_replace(const char* str, char* orig, char* rep, char* output)
     char* buffer = (char*)calloc(8192, sizeof(char));
     char *p;
 
-    sprintf(buffer, "%s", str);
+    if (!buffer)
+	    abort();
+
+    snprintf(buffer, 8191, "%s", str);
     if (!(p = strstr(buffer, orig))) {  // Is 'orig' even in 'str'?
         sprintf(output, "%s", buffer);
         free(buffer);
@@ -257,11 +260,14 @@ void find_replace_extension(char *str, char *orig, char *rep, char *output)
 {
     char* buffer = (char*)calloc(8192, sizeof(char));
 
-    sprintf(buffer, "%s", str);
+    if (!buffer)
+	    abort();
+
+    snprintf(buffer, 8191, "%s", str);
     char *p = strlaststr(buffer, orig);
     int offset = (p - buffer);
     int chars_from_end = strlen(buffer) - offset;
-    if (!p || chars_from_end != strlen(orig)) {  // Is 'orig' even in 'str' AND is 'orig' found at the end of 'str'?
+    if (!p || chars_from_end != (int)strlen(orig)) {  // Is 'orig' even in 'str' AND is 'orig' found at the end of 'str'?
         sprintf(output, "%s", buffer);
         free(buffer);
         return;
@@ -1092,7 +1098,7 @@ unsigned long custom_hash(char *str)
     unsigned long hash = 5381;
     int c;
 
-    while (c = *str++)
+    while ((c = *str++))
         hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
 
     return hash;

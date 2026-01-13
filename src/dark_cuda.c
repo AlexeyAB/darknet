@@ -215,7 +215,7 @@ void cudnn_check_error_extended(cudnnStatus_t status, const char * const filenam
 #endif
     if (cuda_debug_sync) {
         cudaError_t status = cudaDeviceSynchronize();
-        if (status != CUDNN_STATUS_SUCCESS)
+        if (status != (enum cudaError)CUDNN_STATUS_SUCCESS)
             printf("\n cudaError_t status = cudaDeviceSynchronize() Error in: file: %s function: %s() line: %d\n", filename, function, line);
     }
     cudnn_check_error(status, filename, function, line);
@@ -249,7 +249,7 @@ void cublas_check_error_extended(cublasStatus_t status, const char * const filen
 #endif
     if (cuda_debug_sync) {
         cudaError_t status = cudaDeviceSynchronize();
-      if (status != CUDA_SUCCESS)
+      if (status != (enum cudaError)CUDA_SUCCESS)
           printf("\n cudaError_t status = cudaDeviceSynchronize() Error in: file: %s function: %s() line: %d\n", filename, function, line);
     }
     cublas_check_error(status);
@@ -271,8 +271,8 @@ cublasHandle_t blas_handle()
 }
 
 
-static int switchBlasInit[16] = { 0 };
-static cublasHandle_t switchBlasHandle[16];
+// static int switchBlasInit[16] = { 0 };
+// static cublasHandle_t switchBlasHandle[16];
 
 static cudaStream_t switchStreamsArray[16];
 static int switchStreamInit[16] = { 0 };
@@ -350,10 +350,10 @@ void reset_wait_stream_events() {
 
 
 static float **pinned_ptr = NULL;
-static size_t pinned_num_of_blocks = 0;
-static size_t pinned_index = 0;
-static size_t pinned_block_id = 0;
-static const size_t pinned_block_size = (size_t)1024 * 1024 * 1024 * 1;   // 1 GB block size
+static int pinned_num_of_blocks = 0;
+static int pinned_index = 0;
+static int pinned_block_id = 0;
+static const size_t pinned_block_size = 1024 * 1024 * 1024 * 1;   // 1 GB block size
 static pthread_mutex_t mutex_pinned = PTHREAD_MUTEX_INITIALIZER;
 
 // free CPU-pinned memory
@@ -372,7 +372,7 @@ void free_pinned_memory()
 // custom CPU-pinned memory allocation
 void pre_allocate_pinned_memory(const size_t size)
 {
-    const size_t num_of_blocks = size / pinned_block_size + ((size % pinned_block_size) ? 1 : 0);
+    const int num_of_blocks = size / pinned_block_size + ((size % pinned_block_size) ? 1 : 0);
     printf("pre_allocate... pinned_ptr = %p \n", (void *)pinned_ptr);
 
     pthread_mutex_lock(&mutex_pinned);
@@ -380,7 +380,7 @@ void pre_allocate_pinned_memory(const size_t size)
         pinned_ptr = (float **)calloc(num_of_blocks, sizeof(float *));
         if(!pinned_ptr) error("calloc failed in pre_allocate()", DARKNET_LOC);
 
-        printf("pre_allocate: size = %zu MB, num_of_blocks = %zu, block_size = %zu MB \n",
+        printf("pre_allocate: size = %zu MB, num_of_blocks = %d, block_size = %zu MB \n",
             size / (1024*1024), num_of_blocks, pinned_block_size / (1024 * 1024));
 
         int k;
@@ -411,7 +411,7 @@ float *cuda_make_array_pinned_preallocated(float *x, size_t n)
     {
         if ((allocation_size + pinned_index) > pinned_block_size) {
             const float filled = (float)100 * pinned_index / pinned_block_size;
-            printf("\n Pinned block_id = %zu, filled = %f %% \n", pinned_block_id, filled);
+            printf("\n Pinned block_id = %d, filled = %f %% \n", pinned_block_id, filled);
             pinned_block_id++;
             pinned_index = 0;
         }

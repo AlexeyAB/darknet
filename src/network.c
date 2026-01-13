@@ -244,7 +244,7 @@ network make_network(int n)
     network net = {0};
     net.n = n;
     net.layers = (layer*)xcalloc(net.n, sizeof(layer));
-    net.seen = (uint64_t*)xcalloc(1, sizeof(uint64_t));
+    net.seen = (int64_t*)xcalloc(1, sizeof(int64_t));
     net.cuda_graph_ready = (int*)xcalloc(1, sizeof(int));
     net.badlabels_reject_threshold = (float*)xcalloc(1, sizeof(float));
     net.delta_rolling_max = (float*)xcalloc(1, sizeof(float));
@@ -260,8 +260,8 @@ network make_network(int n)
 
     net.input16_gpu = (float**)xcalloc(1, sizeof(float*));
     net.output16_gpu = (float**)xcalloc(1, sizeof(float*));
-    net.max_input16_size = (size_t*)xcalloc(1, sizeof(size_t));
-    net.max_output16_size = (size_t*)xcalloc(1, sizeof(size_t));
+    net.max_input16_size = xcalloc(1, sizeof(ssize_t));
+    net.max_output16_size = xcalloc(1, sizeof(ssize_t));
 #endif
     return net;
 }
@@ -432,7 +432,7 @@ float train_network_waitkey(network net, data d, int wait_key)
 
     if (net.ema_alpha && (*net.cur_iteration) >= ema_start_point)
     {
-        int ema_period = (net.max_batches - ema_start_point - 1000) * (1.0 - net.ema_alpha);
+        // int ema_period = (net.max_batches - ema_start_point - 1000) * (1.0 - net.ema_alpha);
         int ema_apply_point = net.max_batches - 1000;
 
         if (!is_ema_initialized(net))
@@ -503,7 +503,7 @@ int recalculate_workspace_size(network *net)
     if (gpu_index >= 0) cuda_free(net->workspace);
 #endif
     int i;
-    size_t workspace_size = 0;
+    int workspace_size = 0;
     for (i = 0; i < net->n; ++i) {
         layer l = net->layers[i];
         //printf(" %d: layer = %d,", i, l.type);
@@ -580,7 +580,7 @@ int resize_network(network *net, int w, int h)
     net->w = w;
     net->h = h;
     int inputs = 0;
-    size_t workspace_size = 0;
+    int workspace_size = 0;
     //fprintf(stderr, "Resizing to %d x %d...\n", w, h);
     //fflush(stderr);
     for (i = 0; i < net->n; ++i){
@@ -657,7 +657,7 @@ int resize_network(network *net, int w, int h)
         printf(" try to allocate additional workspace_size = %1.2f MB \n", (float)workspace_size / 1000000);
         net->workspace = cuda_make_array(0, workspace_size/sizeof(float) + 1);
         net->input_state_gpu = cuda_make_array(0, size);
-        if (cudaSuccess == cudaHostAlloc(&net->input_pinned_cpu, size * sizeof(float), cudaHostRegisterMapped))
+        if (cudaSuccess == cudaHostAlloc((void**)&net->input_pinned_cpu, size * sizeof(float), cudaHostRegisterMapped))
             net->input_pinned_cpu_flag = 1;
         else {
             cudaGetLastError(); // reset CUDA-error
@@ -1281,10 +1281,12 @@ void free_network(network net)
 #endif
 }
 
+#if 0
 static float relu(float src) {
     if (src > 0) return src;
     return 0;
 }
+#endif
 
 static float lrelu(float src) {
     const float eps = 0.001;
@@ -1313,7 +1315,7 @@ void fuse_conv_batchnorm(network net)
 
                     double precomputed = l->scales[f] / (sqrt((double)l->rolling_variance[f] + .00001));
 
-                    const size_t filter_size = l->size*l->size*l->c / l->groups;
+                    const int filter_size = l->size*l->size*l->c / l->groups;
                     int i;
                     for (i = 0; i < filter_size; ++i) {
                         int w_index = f*filter_size + i;

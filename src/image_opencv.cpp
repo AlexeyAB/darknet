@@ -942,6 +942,7 @@ extern "C" void draw_detections_cv_v3(mat_cv* mat, detection *dets, int num, flo
                 float red = get_color(2, offset, classes);
                 float green = get_color(1, offset, classes);
                 float blue = get_color(0, offset, classes);
+#if 0
                 float rgb[3];
 
                 //width = prob*20+2;
@@ -949,6 +950,7 @@ extern "C" void draw_detections_cv_v3(mat_cv* mat, detection *dets, int num, flo
                 rgb[0] = red;
                 rgb[1] = green;
                 rgb[2] = blue;
+#endif
                 box b = dets[i].bbox;
                 if (std::isnan(b.w) || std::isinf(b.w)) b.w = 0.5;
                 if (std::isnan(b.h) || std::isinf(b.h)) b.h = 0.5;
@@ -1416,18 +1418,18 @@ extern "C" void cv_draw_object(image sized, float *truth_cpu, int max_boxes, int
 
     int it_trackbar_value = 200;
     std::string const it_trackbar_name = "iterations";
-    int it_tb_res = cv::createTrackbar(it_trackbar_name, window_name, &it_trackbar_value, 1000);
+    (void)cv::createTrackbar(it_trackbar_name, window_name, &it_trackbar_value, 1000);
 
     int lr_trackbar_value = 10;
     std::string const lr_trackbar_name = "learning_rate exp";
-    int lr_tb_res = cv::createTrackbar(lr_trackbar_name, window_name, &lr_trackbar_value, 20);
+    (void)cv::createTrackbar(lr_trackbar_name, window_name, &lr_trackbar_value, 20);
 
     int cl_trackbar_value = 0;
     std::string const cl_trackbar_name = "class_id";
-    int cl_tb_res = cv::createTrackbar(cl_trackbar_name, window_name, &cl_trackbar_value, classes-1);
+    (void)cv::createTrackbar(cl_trackbar_name, window_name, &cl_trackbar_value, classes-1);
 
     std::string const bo_trackbar_name = "box-only";
-    int bo_tb_res = cv::createTrackbar(bo_trackbar_name, window_name, boxonly, 1);
+    (void)cv::createTrackbar(bo_trackbar_name, window_name, boxonly, 1);
 
     int i = 0;
 
@@ -1440,7 +1442,7 @@ extern "C" void cv_draw_object(image sized, float *truth_cpu, int max_boxes, int
         if (pressed_key == 27 || pressed_key == 1048603) break;// break;  // ESC - save & exit
 
         frame_clone = frame.clone();
-        char buff[100];
+        //char buff[100];
         std::string lr_value = "learning_rate = " + std::to_string(1.0 / pow(2, lr_trackbar_value));
         cv::putText(frame_clone, lr_value, cv::Point2i(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(10, 50, 10), 3);
         cv::putText(frame_clone, lr_value, cv::Point2i(10, 20), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(20, 120, 60), 2);
