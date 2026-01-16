@@ -487,6 +487,23 @@ float *cuda_make_array(float *x, size_t n)
     return x_gpu;
 }
 
+float *cuda_make_array_init2zero(size_t n) {
+  float *x_gpu;
+  size_t size = sizeof(float) * n;
+  cudaError_t status = cudaMalloc((void **)&x_gpu, size);
+  // cudaError_t status = cudaMallocManaged((void **)&x_gpu, size,
+  // cudaMemAttachGlobal); status = cudaMemAdvise(x_gpu, size,
+  // cudaMemAdviseSetPreferredLocation, cudaCpuDeviceId);
+  if (status != cudaSuccess)
+    fprintf(stderr, " Try to set subdivisions=64 in your cfg-file. \n");
+  CHECK_CUDA(status);
+  // status = cudaMemcpy(x_gpu, x, size, cudaMemcpyHostToDevice);
+  status =cudaMemsetAsync(x_gpu, 0, size, 0);
+  CHECK_CUDA(status);
+  if (!x_gpu) error("Cuda malloc failed", DARKNET_LOC);
+  return x_gpu;
+}
+
 void **cuda_make_array_pointers(void **x, size_t n)
 {
     void **x_gpu;
