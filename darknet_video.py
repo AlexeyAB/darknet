@@ -5,6 +5,7 @@ import time
 import darknet
 import argparse
 import threading
+import multiprocessing as mp
 import queue
 
 
@@ -26,6 +27,8 @@ def parser():
                         help="path to data file")
     parser.add_argument("--thresh", type=float, default=.25,
                         help="remove detections with confidence below this value")
+    parser.add_argument("--multiprocess", action="store_true",
+                        help="use processes instead of threads")
     return parser.parse_args()
 
 
@@ -107,7 +110,7 @@ def convert4cropping(image, bbox, preproc_h, preproc_w):
 
 def video_capture(stop_flag, input_path, raw_frame_queue, preprocessed_frame_queue, preproc_h, preproc_w):
     cap = cv2.VideoCapture(input_path)
-    while cap.isOpened() and not stop_flag.is_set():
+    while cap.isOpened() and stop_flag.empty():
         ret, frame = cap.read()
         if not ret:
             break
@@ -118,13 +121,19 @@ def video_capture(stop_flag, input_path, raw_frame_queue, preprocessed_frame_que
         img_for_detect = darknet.make_image(preproc_w, preproc_h, 3)
         darknet.copy_image_from_bytes(img_for_detect, frame_resized.tobytes())
         preprocessed_frame_queue.put(img_for_detect)
-    stop_flag.set()
+    stop_flag.put(None)
     cap.release()
+    print("video_capture end:", os.getpid())
 
 
 def inference(stop_flag, preprocessed_frame_queue, detections_queue, fps_queue,
-              network, class_names, threshold):
-    while not stop_flag.is_set():
+              config_file, data_file, weights_file, batch_size, threshold, ext_output):
+    network, class_names, _ = darknet.load_network(
+        config_file,
+        data_file,
+        weights_file,
+        batch_size=batch_size)
+    while stop_flag.empty():
         darknet_image = preprocessed_frame_queue.get()
         prev_time = time.time()
         detections = darknet.detect_image(network, class_names, darknet_image, thresh=threshold)
@@ -132,16 +141,18 @@ def inference(stop_flag, preprocessed_frame_queue, detections_queue, fps_queue,
         detections_queue.put(detections)
         fps_queue.put(int(fps))
         print("FPS: {:.2f}".format(fps))
-        darknet.print_detections(detections, args.ext_output)
+        #darknet.print_detections(detections, ext_output)
         darknet.free_image(darknet_image)
+    darknet.free_network_ptr(network)
+    print("inference end:", os.getpid())
 
 
-def drawing(stop_flag, input_video_fps, queues, preproc_h, preproc_w, vid_h, vid_w):
+def drawing(stop_flag, input_video_fps, queues, preproc_h, preproc_w, vid_h, vid_w, out_filename, dont_show, class_colors):
     random.seed(3)  # deterministic bbox colors
     raw_frame_queue, preprocessed_frame_queue, detections_queue, fps_queue = queues
-    video = set_saved_video(args.out_filename, (vid_w, vid_h), input_video_fps)
+    video = set_saved_video(out_filename, (vid_w, vid_h), input_video_fps)
     fps = 1
-    while not stop_flag.is_set():
+    while stop_flag.empty():
         frame = raw_frame_queue.get()
         detections = detections_queue.get()
         fps = fps_queue.get()
@@ -151,13 +162,13 @@ def drawing(stop_flag, input_video_fps, queues, preproc_h, preproc_w, vid_h, vid
                 bbox_adjusted = convert2original(frame, bbox, preproc_h, preproc_w)
                 detections_adjusted.append((str(label), confidence, bbox_adjusted))
             image = darknet.draw_boxes(detections_adjusted, frame, class_colors)
-            if not args.dont_show:
+            if not dont_show:
                 cv2.imshow("Inference", image)
-            if args.out_filename is not None:
+            if out_filename is not None:
                 video.write(image)
             if cv2.waitKey(fps) == 27:
                 break
-    stop_flag.set()
+    stop_flag.put(None)
     video.release()
     cv2.destroyAllWindows()
     timeout = 1 / (fps if fps > 0 else 0.5)
@@ -166,18 +177,22 @@ def drawing(stop_flag, input_video_fps, queues, preproc_h, preproc_w, vid_h, vid
             q.get(block=True, timeout=timeout)
         except queue.Empty:
             pass
+    print("drawing end:", os.getpid())
 
 
 if __name__ == "__main__":
     args = parser()
     check_arguments_errors(args)
-    network, class_names, class_colors = darknet.load_network(
+    batch_size = 1
+    network, class_names, class_colors = darknet.load_network(  # Load network twice :(
         args.config_file,
         args.data_file,
         args.weights,
-        batch_size=1)
+        batch_size=batch_size)
     darknet_width = darknet.network_width(network)
     darknet_height = darknet.network_height(network)
+    darknet.free_network_ptr(network)
+    del network
     input_path = str2int(args.input)
     cap = cv2.VideoCapture(input_path)  # Open video twice :(
     video_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -186,9 +201,14 @@ if __name__ == "__main__":
     cap.release()
     del cap
 
-    ExecUnit = threading.Thread
-    Queue = queue.Queue
-    stop_flag = threading.Event()
+    if args.multiprocess:
+        ExecUnit = mp.Process
+        Queue = mp.Queue
+    else:
+        ExecUnit = threading.Thread
+        Queue = queue.Queue
+
+    stop_flag = Queue()
 
     raw_frame_queue = Queue()
     preprocessed_frame_queue = Queue(maxsize=1)
@@ -199,15 +219,19 @@ if __name__ == "__main__":
         ExecUnit(target=video_capture, args=(stop_flag, input_path, raw_frame_queue, preprocessed_frame_queue,
                                              darknet_height, darknet_width)),
         ExecUnit(target=inference, args=(stop_flag, preprocessed_frame_queue, detections_queue, fps_queue,
-                                         network, class_names, args.thresh)),
+                                         args.config_file, args.data_file, args.weights, batch_size, args.thresh,
+                                         args.ext_output)),
         ExecUnit(target=drawing, args=(stop_flag, video_fps,
                                        (raw_frame_queue, preprocessed_frame_queue, detections_queue, fps_queue),
-                                       darknet_height, darknet_width, video_height, video_width)),
+                                       darknet_height, darknet_width, video_height, video_width,
+                                       args.out_filename, args.dont_show, class_colors)),
     )
     for exec_unit in exec_units:
         exec_unit.start()
+    print("------- EXEC UNIT:", ExecUnit)
     for exec_unit in exec_units:
         exec_unit.join()
+    print("------- EXEC UNIT:", ExecUnit)
 
     print("\nDone.")
 

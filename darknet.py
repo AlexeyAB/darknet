@@ -15,6 +15,17 @@ import cv2
 import numpy as np
 
 
+class PickleableStructure(ct.Structure):
+    def _compute_state(self):
+        raise NotImplementedError
+
+    def __reduce__(self):
+        return self.__class__, (), self._compute_state()
+
+    def __setstate__(self, state):
+        raise NotImplementedError
+
+
 class BOX(ct.Structure):
     _fields_ = (
         ("x", ct.c_float),
@@ -59,13 +70,20 @@ class DETNUMPAIR(ct.Structure):
 DETNUMPAIRPtr = ct.POINTER(DETNUMPAIR)
 
 
-class IMAGE(ct.Structure):
+class IMAGE(PickleableStructure):
     _fields_ = (
         ("w", ct.c_int),
         ("h", ct.c_int),
         ("c", ct.c_int),
         ("data", FloatPtr),
     )
+
+    def _compute_state(self):
+        return self.w, self.h, self.c, self.data[:self.w * self.h * self.c]
+
+    def __setstate__(self, state):
+        self.w, self.h, self.c = state[:3]
+        self.data = ct.cast((self.data._type_ * (self.w * self.h * self.c))(*state[-1]), FloatPtr)
 
 
 class METADATA(ct.Structure):
@@ -261,7 +279,20 @@ if os.name == "posix":
 elif os.name == "nt":
     cwd = os.path.dirname(__file__)
     os.environ["PATH"] = os.path.pathsep.join((cwd, os.environ["PATH"]))
-    lib = ct.CDLL("darknet.dll", winmode = 0, mode = ct.RTLD_GLOBAL)
+    #lib = ct.CDLL("darknet.dll", ct.RTLD_GLOBAL)
+    os.add_dll_directory(os.getcwd())
+    _GPU = 1
+    if _GPU:
+        nvs = (
+            r"F:\Install\pc064\NVidia\CUDAToolkit\11.3\bin",
+            r"F:\Install\pc064\NVidia\cuDNN\8.2.0-CUDA11\bin",
+        )
+        for nv in nvs:
+            os.add_dll_directory(nv)
+        os.environ["PATH"] += ";" + ";".join(nvs)  # ! Strangely, crashes (can't find cudnn_ops_infer64_8.dll) without !
+        lib = ct.CDLL("darknet_gpu.dll", ct.RTLD_GLOBAL)
+    else:
+        lib = ct.CDLL("darknet_nogpu.dll", ct.RTLD_GLOBAL)
 else:
     lib = None  # Intellisense
     print("Unsupported OS")
