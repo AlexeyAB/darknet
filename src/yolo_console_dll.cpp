@@ -23,6 +23,7 @@
 #include "yolo_v2_class.hpp"    // imported functions from DLL
 
 #ifdef OPENCV
+#include <sys/stat.h>   // check if file exists
 #ifdef ZED_STEREO
 #include <sl/Camera.hpp>
 #if ZED_SDK_MAJOR_VERSION == 2
@@ -664,6 +665,14 @@ int main(int argc, char *argv[])
 
             }
             else {    // image file
+                // check if file exists
+                struct stat info;
+                if (stat(filename.c_str(), &info) != 0) {
+                    filename.clear();
+                    std::cout << "File not found! Please check the file path..." << std::endl;
+                    continue;
+                }
+
                 // to achive high performance for multiple images do these 2 lines in another thread
                 cv::Mat mat_img = cv::imread(filename);
                 auto det_image = detector.mat_to_image_resize(mat_img);
