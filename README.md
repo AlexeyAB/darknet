@@ -361,10 +361,12 @@ If you customize build with CMake GUI, darknet executable will be installed in y
     `./darknet detector test cfg/coco.data cfg/yolov4.cfg yolov4.weights -dont_show -ext_output < data/train.txt > result.txt`
 - To process a video and output results to a json file use: `darknet.exe detector demo cfg/coco.data cfg/yolov3.cfg yolov3.weights file.mp4 -dont_show -json_file_output results.json`
 - Pseudo-labelling - to process a list of images `data/new_train.txt` and save results of detection in Yolo training format for each image as label `<image_name>.txt` (in this way you can increase the amount of training data) use:
-    `./darknet detector test cfg/coco.data cfg/yolov4.cfg yolov4.weights -thresh 0.25 -dont_show -save_labels < data/new_train.txt`
-- To calculate anchors: `./darknet detector calc_anchors data/obj.data -num_of_clusters 9 -width 416 -height 416`
-- To check accuracy mAP@IoU=50: `./darknet detector map data/obj.data yolo-obj.cfg backup\yolo-obj_7000.weights`
-- To check accuracy mAP@IoU=75: `./darknet detector map data/obj.data yolo-obj.cfg backup\yolo-obj_7000.weights -iou_thresh 0.75`
+    `darknet.exe detector test cfg/coco.data cfg/yolov4.cfg yolov4.weights -thresh 0.25 -dont_show -save_labels < data/new_train.txt`
+* To calculate anchors: `darknet.exe detector calc_anchors data/obj.data -num_of_clusters 9 -width 416 -height 416`
+* To check accuracy mAP@IoU=50: `darknet.exe detector map data/obj.data yolo-obj.cfg backup\yolo-obj_7000.weights`
+* To check accuracy mAP@IoU=75: `darknet.exe detector map data/obj.data yolo-obj.cfg backup\yolo-obj_7000.weights -iou_thresh 0.75`
+* To save the cropped image of the object detected: [`uncomment the following lines of code`](https://github.com/AlexeyAB/darknet/blob/master/src/image_opencv.cpp#L980-L996)
+* To run inference on all the images in a folder: `./darknet detector test ./cfg/coco.data ./cfg/yolov4.cfg ./yolov4.weights -i 0 -thresh 0.25 --folder_inference ./result_img/` here `./result_img/` is the path of the folder in which the inference has to be done. the folder name can be anything, as long as it exists. After the inference the images will be moved to `./processed_files/`. To change the folder name or path, the changes cane be done [`here`](https://github.com/AlexeyAB/darknet/blob/master/src/detector.c#L1894).
 
 ##### For using network video-camera mjpeg-stream with any Android smartphone
 

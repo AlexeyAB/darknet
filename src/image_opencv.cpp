@@ -996,12 +996,14 @@ extern "C" void draw_detections_cv_v3(mat_cv* mat, detection *dets, int num, flo
                 color.val[2] = blue * 256;
 
                 // you should create directory: result_img
+                //converting cv::Mat type to Iplimage type
+                //IplImage* ipltypeimg = new IplImage(*show_img);
                 //static int copied_frame_id = -1;
                 //static IplImage* copy_img = NULL;
                 //if (copied_frame_id != frame_id) {
                 //    copied_frame_id = frame_id;
-                //    if(copy_img == NULL) copy_img = cvCreateImage(cvSize(show_img->width, show_img->height), show_img->depth, show_img->nChannels);
-                //    cvCopy(show_img, copy_img, 0);
+                //    if(copy_img == NULL) copy_img = cvCreateImage(cvSize(ipltypeimg->width, ipltypeimg->height), ipltypeimg->depth, ipltypeimg->nChannels);
+                //    cvCopy(ipltypeimg, copy_img, 0);
                 //}
                 //static int img_id = 0;
                 //img_id++;
