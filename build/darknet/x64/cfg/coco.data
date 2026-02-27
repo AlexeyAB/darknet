@@ -1,8 +1,0 @@
-classes= 80
-train  = E:/MSCOCO/trainvalno5k.txt
-#train = E:/MSCOCO/5k.txt
-valid  = E:/MSCOCO/5k.txt
-names = data/coco.names
-backup = backup
-eval=coco
-
