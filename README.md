@@ -580,7 +580,9 @@ It will create `.txt`-file for each `.jpg`-image-file - in the same directory an
    - (to disable Loss-Window use `darknet.exe detector train data/obj.data yolo-obj.cfg yolov4.conv.137 -dont_show`, if you train on computer without monitor like a cloud Amazon EC2)
    - (to see the mAP & Loss-chart during training on remote server without GUI, use command `darknet.exe detector train data/obj.data yolo-obj.cfg yolov4.conv.137 -dont_show -mjpeg_port 8090 -map` then open URL `http://ip-address:8090` in Chrome/Firefox browser)
 
-8.1. For training with mAP (mean average precisions) calculation for each 4 Epochs (set `valid=valid.txt` or `train.txt` in `obj.data` file) and run: `darknet.exe detector train data/obj.data yolo-obj.cfg yolov4.conv.137 -map`
+8.1. For training with mAP (mean average precisions) calculation for each 4 Epochs (set `valid=valid.txt` or `train.txt` in `obj.data` file) and run: `darknet.exe detector train data/obj.data yolo-obj.cfg darknet53.conv.74 -map` 
+
+8.2. One can also set the `-mAP_epochs` in the training command if less or more frequent mAP calculation is needed. For example in order to calculate mAP for each 2 Epochs run `darknet.exe detector train data/obj.data yolo-obj.cfg darknet53.conv.74 -map -mAP_epochs 2`
 
 8.2. One can also set the `-mAP_epochs` in the training command if less or more frequent mAP calculation is needed. For example in order to calculate mAP for each 2 Epochs run `darknet.exe detector train data/obj.data yolo-obj.cfg yolov4.conv.137 -map -mAP_epochs 2`
 
