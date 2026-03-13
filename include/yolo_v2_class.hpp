@@ -77,6 +77,8 @@ public:
     bool wait_stream;
 
     LIB_API Detector(std::string cfg_filename, std::string weight_filename, int gpu_id = 0, int batch_size = 1);
+    LIB_API Detector(const std::string& cfg_string, std::uint8_t const* weights, size_t size, int gpu_id );
+    LIB_API Detector(const std::string& cfg_string, std::vector<std::uint8_t> const& weights, int gpu_id = 0): Detector(cfg_string, weights.data(), weights.size(), gpu_id) {}
     LIB_API ~Detector();
 
     LIB_API std::vector<bbox_t> detect(std::string image_filename, float thresh = 0.2, bool use_mean = false);
