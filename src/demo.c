@@ -15,6 +15,10 @@
 #include <sys/time.h>
 #endif
 
+#ifdef FFMPEG
+#include "image_ffmpeg.h"
+#endif
+
 #ifdef OPENCV
 
 #include "http_stream.h"
@@ -54,6 +58,9 @@ static const int thread_wait_ms = 1;
 static volatile int run_fetch_in_thread = 0;
 static volatile int run_detect_in_thread = 0;
 
+#ifdef FFMPEG
+static int input_is_stream = 0;
+#endif
 
 void *fetch_in_thread(void *ptr)
 {
@@ -65,10 +72,16 @@ void *fetch_in_thread(void *ptr)
             this_thread_yield();
         }
         int dont_close_stream = 0;    // set 1 if your IP-camera periodically turns off and turns on video-stream
-        if (letter_box)
+        if (letter_box){
             in_s = get_image_from_stream_letterbox(cap, net.w, net.h, net.c, &in_img, dont_close_stream);
-        else
+        }else{
+#ifdef FFMPEG
+            if (input_is_stream) in_s = get_image_from_ffmpeg_stream_resize(&in_img, net.w, net.h, net.c);
+            else in_s = get_image_from_stream_resize(cap, net.w, net.h, net.c, &in_img, dont_close_stream);
+#else
             in_s = get_image_from_stream_resize(cap, net.w, net.h, net.c, &in_img, dont_close_stream);
+#endif
+        }
         if (!in_s.data) {
             printf("Stream closed.\n");
             custom_atomic_store_int(&flag_exit, 1);
@@ -178,6 +191,10 @@ void demo(char *cfgfile, char *weightfile, float thresh, float hier_thresh, int 
 
     if(filename){
         printf("video file: %s\n", filename);
+#ifdef FFMPEG
+        open_video_stream(filename);
+        input_is_stream = 1;
+#endif
         cap = get_capture_video_stream(filename);
         demo_skip_frame = is_live_stream(filename);
     }else{
@@ -358,7 +375,6 @@ void demo(char *cfgfile, char *weightfile, float thresh, float hier_thresh, int 
                 write_frame_cv(output_video_writer, show_img);
                 printf("\n cvWriteFrame \n");
             }
-
             while (custom_atomic_load_int(&run_detect_in_thread)) {
                 if(avg_fps > 50) this_thread_yield();
                 else this_thread_sleep_for(thread_wait_ms);   // custom_join(detect_thread, 0);
@@ -406,6 +422,9 @@ void demo(char *cfgfile, char *weightfile, float thresh, float hier_thresh, int 
                 start_time = get_time_point();
             }
         }
+#ifdef FFMPEG
+        av_pkt_unref();
+#endif
     }
     printf("input video stream closed. \n");
     if (output_video_writer) {

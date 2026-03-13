@@ -7,6 +7,8 @@ OPENMP=0
 LIBSO=0
 ZED_CAMERA=0
 ZED_CAMERA_v2_8=0
+STREAM=0
+FFMPEG=0
 
 # set GPU=1 and CUDNN=1 to speedup on GPU
 # set CUDNN_HALF=1 to further speedup 3 x times (Mixed-precision on Tensor Cores) GPU: Volta, Xavier, Turing, Ampere, Ada and higher
@@ -94,7 +96,21 @@ NVCC=nvcc
 OPTS=-Ofast
 LDFLAGS= -lm -pthread
 COMMON= -Iinclude/ -I3rdparty/stb/include
-CFLAGS=-Wall -Wfatal-errors -Wno-unused-result -Wno-unknown-pragmas -fPIC -rdynamic
+CFLAGS=-Wall -Wfatal-errors -Wno-unused-result -Wno-unknown-pragmas -fPIC -fpermissive -rdynamic
+
+ifeq ($(STREAM), 1)
+COMMON+= -DSTREAM
+CFLAGS+= -DSTREAM
+LDFLAGS+= `pkg-config --libs libavformat libavcodec libavutil libswscale 2>/dev/null`
+COMMON+= `pkg-config --cflags libavformat libavcodec libavutil libswscale 2>/dev/null`
+endif
+
+ifeq ($(FFMPEG), 1)
+COMMON+= -DFFMPEG
+CFLAGS+= -DFFMPEG
+LDFLAGS+= `pkg-config --libs libswresample libswscale libavutil libavcodec libavformat 2>/dev/null`
+COMMON+= `pkg-config --cflags libswresample libswscale libavutil libavcodec libavformat 2>/dev/null`
+endif
 
 ifeq ($(DEBUG), 1)
 #OPTS= -O0 -g
@@ -171,6 +187,12 @@ OBJ=image_opencv.o http_stream.o gemm.o utils.o dark_cuda.o convolutional_layer.
 ifeq ($(GPU), 1)
 LDFLAGS+= -lstdc++
 OBJ+=convolutional_kernels.o activation_kernels.o im2col_kernels.o col2im_kernels.o blas_kernels.o crop_layer_kernels.o dropout_layer_kernels.o maxpool_layer_kernels.o network_kernels.o avgpool_layer_kernels.o
+endif
+ifeq ($(STREAM), 1)
+OBJ+=stream.o streamer.o
+endif
+ifeq ($(FFMPEG), 1)
+OBJ+=image_ffmpeg.o
 endif
 
 OBJS = $(addprefix $(OBJDIR), $(OBJ))
