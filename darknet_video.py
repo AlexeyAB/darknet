@@ -133,7 +133,7 @@ def inference(stop_flag, preprocessed_frame_queue, detections_queue, fps_queue,
         fps_queue.put(int(fps))
         print("FPS: {:.2f}".format(fps))
         darknet.print_detections(detections, args.ext_output)
-        darknet.free_image(darknet_image)
+    cap.release()
 
 
 def drawing(stop_flag, input_video_fps, queues, preproc_h, preproc_w, vid_h, vid_w):
