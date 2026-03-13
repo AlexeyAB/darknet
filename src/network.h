@@ -159,6 +159,7 @@ int resize_network(network *net, int w, int h);
 //LIB_API void set_batch_network(network *net, int b);
 int get_network_input_size(network net);
 float get_network_cost(network net);
+LIB_API void set_batch_network(network *net, int b);
 //LIB_API layer* get_network_layer(network* net, int i);
 //LIB_API detection *get_network_boxes(network *net, int w, int h, float thresh, float hier, int *map, int relative, int *num, int letter);
 //LIB_API detection *make_network_boxes(network *net, float thresh, int *num);

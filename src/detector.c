@@ -66,6 +66,16 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
 
     srand(time(0));
     int seed = rand();
+
+    float last_best_weight = -1;
+    char bw_buff[256];
+    sprintf(bw_buff, "%s/%s_best.weights", backup_directory, base);
+    FILE *best_weight_file;
+    if (best_weight_file = fopen(bw_buff, "r")) {
+        fclose(best_weight_file);
+        last_best_weight = validate_detector_map(datacfg, cfgfile, bw_buff, 0.25, 0.5, 0, 0, NULL);// &net_combined);
+    }
+
     int k;
     for (k = 0; k < ngpus; ++k) {
         srand(seed);
@@ -126,7 +136,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
     iter_save_last = get_current_iteration(net);
     iter_map = get_current_iteration(net);
     float mean_average_precision = -1;
-    float best_map = mean_average_precision;
+    float best_map = last_best_weight;
 
     load_args args = { 0 };
     args.w = net.w;
