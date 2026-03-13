@@ -4,6 +4,10 @@
 #include "image.h"
 #include "matrix.h"
 
+#ifdef REALSENSE2
+#include "rdv_GetRealsense.h"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -74,6 +78,13 @@ cap_cv* get_capture_webcam(int index);
 void release_capture(cap_cv* cap);
 
 mat_cv* get_capture_frame_cv(cap_cv *cap);
+
+#ifdef REALSENSE2
+mat_cv* get_depth_frame_cv(cap_cv *cap);
+mat_cv* get_depth_value_cv(cap_cv *cap, const int x=-1, const int y=-1, const int w=-1, const int h=-1);
+
+#endif
+
 int get_stream_fps_cpp_cv(cap_cv *cap);
 double get_capture_property_cv(cap_cv *cap, int property_id);
 double get_capture_frame_count_cv(cap_cv *cap);
