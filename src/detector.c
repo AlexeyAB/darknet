@@ -1697,8 +1697,33 @@ void test_detector(char *datacfg, char *cfgfile, char *weightfile, char *filenam
         printf("%s: Predicted in %lf milli-seconds.\n", input, ((double)get_time_point() - time) / 1000);
         //printf("%s: Predicted in %f seconds.\n", input, (what_time_is_it_now()-time));
 
+        int tta = 1;
+
+
         int nboxes = 0;
         detection *dets = get_network_boxes(&net, im.w, im.h, thresh, hier_thresh, 0, 1, &nboxes, letter_box);
+
+        if (tta) {
+            printf("Performing test-time augmentation.\n");
+            flip_image(sized);
+            network_predict(net, sized.data);
+            int naugboxes = 0;
+            detection *augdets = get_network_boxes(&net, im.w, im.h, thresh, hier_thresh, 0, 1, &naugboxes, letter_box);
+
+            detection *combineddets = (detection*)xcalloc(nboxes + naugboxes, sizeof(detection));
+            for (int i = 0; i < nboxes; i++) {
+                combineddets[i] = dets[i];
+            }
+            free(dets);
+            for (int i = 0; i < naugboxes; i++) {
+                augdets[i].bbox.x = 1 - augdets[i].bbox.x;
+                combineddets[i+nboxes] = augdets[i];
+            }
+            free(augdets);
+            dets = combineddets;
+            nboxes = nboxes + naugboxes;
+        }
+
         if (nms) {
             if (l.nms_kind == DEFAULT_NMS) do_nms_sort(dets, nboxes, l.classes, nms);
             else diounms_sort(dets, nboxes, l.classes, nms, l.nms_kind, l.beta_nms);
