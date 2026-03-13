@@ -77,6 +77,9 @@ using std::endl;
 #define CV_AA cv::LINE_AA
 #endif
 
+    image mat_to_image(cv::Mat mat);
+    cv::Mat image_to_mat(image img);
+
 extern "C" {
 
     //struct mat_cv : cv::Mat {  };
@@ -90,8 +93,6 @@ extern "C" {
 // ====================================================================
 // cv::Mat
 // ====================================================================
-    image mat_to_image(cv::Mat mat);
-    cv::Mat image_to_mat(image img);
 //    image ipl_to_image(mat_cv* src);
 //    mat_cv *image_to_ipl(image img);
 //    cv::Mat ipl_to_mat(IplImage *ipl);
@@ -303,8 +304,9 @@ IplImage *mat_to_ipl(cv::Mat mat)
 }
 // ----------------------------------------
 */
+}
 
-extern "C" cv::Mat image_to_mat(image img)
+cv::Mat image_to_mat(image img)
 {
     int channels = img.c;
     int width = img.w;
@@ -324,7 +326,7 @@ extern "C" cv::Mat image_to_mat(image img)
 }
 // ----------------------------------------
 
-extern "C" image mat_to_image(cv::Mat mat)
+image mat_to_image(cv::Mat mat)
 {
     int w = mat.cols;
     int h = mat.rows;
@@ -346,6 +348,7 @@ extern "C" image mat_to_image(cv::Mat mat)
     return im;
 }
 
+extern "C" {
 image mat_to_image_cv(mat_cv *mat)
 {
     return mat_to_image(*(cv::Mat*)mat);
