@@ -76,26 +76,35 @@ using std::endl;
 #ifndef CV_AA
 #define CV_AA cv::LINE_AA
 #endif
+cv::Point2f rotate_point(cv::Point2f in, float angle, cv::Point2f center)
+{
+    angle=-angle*CV_PI/180.0f;
+    cv::Point2f out;
+    out.x =(std::cos(angle) * (in.x-center.x)) - (std::sin(angle) * (in.y-center.y)) + center.x;
 
+    out.y =(std::sin(angle) * (in.x-center.x)) + (std::cos(angle) * (in.y-center.y)) + center.y;
+    return out;
+}
 extern "C" {
 
-    //struct mat_cv : cv::Mat {  };
-    //struct cap_cv : cv::VideoCapture { };
-    //struct write_cv : cv::VideoWriter {  };
+//struct mat_cv : cv::Mat {  };
+//struct cap_cv : cv::VideoCapture { };
+//struct write_cv : cv::VideoWriter {  };
 
-    //struct mat_cv : cv::Mat { int a[0]; };
-    //struct cap_cv : cv::VideoCapture { int a[0]; };
-    //struct write_cv : cv::VideoWriter { int a[0]; };
+//struct mat_cv : cv::Mat { int a[0]; };
+//struct cap_cv : cv::VideoCapture { int a[0]; };
+//struct write_cv : cv::VideoWriter { int a[0]; };
 
 // ====================================================================
 // cv::Mat
 // ====================================================================
-    image mat_to_image(cv::Mat mat);
-    cv::Mat image_to_mat(image img);
+image mat_to_image(cv::Mat mat);
+cv::Mat image_to_mat(image img);
 //    image ipl_to_image(mat_cv* src);
 //    mat_cv *image_to_ipl(image img);
 //    cv::Mat ipl_to_mat(IplImage *ipl);
 //    IplImage *mat_to_ipl(cv::Mat mat);
+
 
 
 extern "C" mat_cv *load_image_mat_cv(const char *filename, int flag)
@@ -503,14 +512,14 @@ extern "C" void show_image_mat(mat_cv *mat_ptr, const char *name)
 extern "C" write_cv *create_video_writer(char *out_filename, char c1, char c2, char c3, char c4, int fps, int width, int height, int is_color)
 {
     try {
-    cv::VideoWriter * output_video_writer =
-#ifdef CV_VERSION_EPOCH
-        new cv::VideoWriter(out_filename, CV_FOURCC(c1, c2, c3, c4), fps, cv::Size(width, height), is_color);
+        cv::VideoWriter * output_video_writer =
+        #ifdef CV_VERSION_EPOCH
+                new cv::VideoWriter(out_filename, CV_FOURCC(c1, c2, c3, c4), fps, cv::Size(width, height), is_color);
 #else
-        new cv::VideoWriter(out_filename, cv::VideoWriter::fourcc(c1, c2, c3, c4), fps, cv::Size(width, height), is_color);
+                new cv::VideoWriter(out_filename, cv::VideoWriter::fourcc(c1, c2, c3, c4), fps, cv::Size(width, height), is_color);
 #endif
 
-    return (write_cv *)output_video_writer;
+        return (write_cv *)output_video_writer;
     }
     catch (...) {
         cerr << "OpenCV exception: create_video_writer \n";
@@ -1015,7 +1024,7 @@ extern "C" void draw_detections_cv_v3(mat_cv* mat, detection *dets, int num, flo
                 cv::rectangle(*show_img, pt1, pt2, color, width, 8, 0);
                 if (ext_output)
                     printf("\t(left_x: %4.0f   top_y: %4.0f   width: %4.0f   height: %4.0f)\n",
-                    (float)left, (float)top, b.w*show_img->cols, b.h*show_img->rows);
+                           (float)left, (float)top, b.w*show_img->cols, b.h*show_img->rows);
                 else
                     printf("\n");
 
@@ -1107,7 +1116,7 @@ extern "C" mat_cv* draw_train_chart(char *windows_name, float max_img_loss, int 
 // ----------------------------------------
 
 extern "C" void draw_train_loss(char *windows_name, mat_cv* img_src, int img_size, float avg_loss, float max_img_loss, int current_batch, int max_batches,
-    float precision, int draw_precision, char *accuracy_name, float contr_acc, int dont_show, int mjpeg_port, double time_remaining)
+                                float precision, int draw_precision, char *accuracy_name, float contr_acc, int dont_show, int mjpeg_port, double time_remaining)
 {
     try {
         cv::Mat &img = *(cv::Mat*)img_src;
@@ -1126,9 +1135,9 @@ extern "C" void draw_train_loss(char *windows_name, mat_cv* img_src, int img_siz
 
             if (current_batch > 0) {
                 cv::line(img,
-                    cv::Point(img_offset + draw_size * (float)(current_batch - 1) / max_batches, draw_size * (1 - old_contr_acc)),
-                    cv::Point(img_offset + draw_size * (float)current_batch / max_batches, draw_size * (1 - contr_acc)),
-                    CV_RGB(0, 150, 70), 1, 8, 0);
+                         cv::Point(img_offset + draw_size * (float)(current_batch - 1) / max_batches, draw_size * (1 - old_contr_acc)),
+                         cv::Point(img_offset + draw_size * (float)current_batch / max_batches, draw_size * (1 - contr_acc)),
+                         CV_RGB(0, 150, 70), 1, 8, 0);
             }
             old_contr_acc = contr_acc;
 
@@ -1147,10 +1156,10 @@ extern "C" void draw_train_loss(char *windows_name, mat_cv* img_src, int img_siz
                 cv::putText(img, accuracy_name, cv::Point(10, 12), cv::FONT_HERSHEY_COMPLEX_SMALL, 0.7, CV_RGB(255, 0, 0), 1, CV_AA);
 
             if (iteration_old != 0){
-                    cv::line(img,
-                        cv::Point(img_offset + draw_size * (float)iteration_old / max_batches, draw_size * (1 - old_precision)),
-                        cv::Point(img_offset + draw_size * (float)current_batch / max_batches, draw_size * (1 - precision)),
-                        CV_RGB(255, 0, 0), 1, 8, 0);
+                cv::line(img,
+                         cv::Point(img_offset + draw_size * (float)iteration_old / max_batches, draw_size * (1 - old_precision)),
+                         cv::Point(img_offset + draw_size * (float)current_batch / max_batches, draw_size * (1 - precision)),
+                         CV_RGB(255, 0, 0), 1, 8, 0);
             }
 
             sprintf(char_buff, "%2.1f%% ", precision * 100);
@@ -1202,10 +1211,11 @@ extern "C" void draw_train_loss(char *windows_name, mat_cv* img_src, int img_siz
 // Data augmentation
 // ====================================================================
 
+
 extern "C" image image_data_augmentation(mat_cv* mat, int w, int h,
-    int pleft, int ptop, int swidth, int sheight, int flip,
-    float dhue, float dsat, float dexp,
-    int gaussian_noise, int blur, int num_boxes, int truth_size, float *truth)
+                                         int pleft, int ptop, int swidth, int sheight, int flip,
+                                         float dhue, float dsat, float dexp,
+                                         int gaussian_noise, int blur, int num_boxes, int truth_size, float *truth,int angle_detector)
 {
     image out;
     try {
@@ -1240,6 +1250,37 @@ extern "C" image image_data_augmentation(mat_cv* mat, int w, int h,
             sized = cropped.clone();
         }
 
+        if(angle_detector>0){
+            cv::Point2f center(sized.cols/2,sized.rows/2);
+            float angle=((rand()%angle_detector)*2)-angle_detector;
+            int t;
+            cv::Mat rot = cv::getRotationMatrix2D(center,angle,1.0);
+            cv::Mat dst;
+            cv::warpAffine(sized,sized,rot,cv::Size(sized.cols,sized.rows));
+
+            for (t = 0; t < num_boxes; ++t) {
+                box b = float_to_box_stride(truth + t*truth_size, 1);
+                if (!b.x) break;
+                int x=(b.x - b.w / 2.)*sized.cols;
+                int y=(b.y - b.h / 2.)*sized.rows;
+                int w = b.w * sized.cols;
+                int h = b.h * sized.rows;
+                cv::Point2f tl=rotate_point(cv::Point2f(x,y),angle,center);
+                cv::Point2f tr=rotate_point(cv::Point2f(x+w,y),angle,center);
+                cv::Point2f bl=rotate_point(cv::Point2f(x,y+h),angle,center);
+                cv::Point2f br=rotate_point(cv::Point2f(x+w,y+h),angle,center);
+                std::vector<cv::Point2f> points{tl,tr,bl,br};
+                cv::Rect r = cv::boundingRect(points);
+                r = r & cv::Rect(0,0,sized.cols,sized.rows);
+                cv::rectangle(sized,r,cv::Scalar(0,255,0),2,CV_AA);
+
+                float* locs=truth+t*truth_size;
+                locs[0]=static_cast<float>((r.x+r.width/2))/sized.cols;
+                locs[1]=static_cast<float>((r.y+r.height/2))/sized.rows;
+                locs[2]=static_cast<float>((r.width))/sized.cols;
+                locs[3]=static_cast<float>((r.height))/sized.rows;
+            }
+        }
         // HSV augmentation
         // cv::COLOR_BGR2HSV, cv::COLOR_RGB2HSV, cv::COLOR_HSV2BGR, cv::COLOR_HSV2RGB
         if (dsat != 1 || dexp != 1 || dhue != 0) {
@@ -1309,6 +1350,7 @@ extern "C" image image_data_augmentation(mat_cv* mat, int w, int h,
             }
             dst.copyTo(sized);
         }
+
 
         if (gaussian_noise) {
             cv::Mat noise = cv::Mat(sized.size(), sized.type());
@@ -1454,9 +1496,9 @@ extern "C" void cv_draw_object(image sized, float *truth_cpu, int max_boxes, int
         }
 
         if (draw_select) {
-             cv::Rect selected_rect(
-                cv::Point2i((int)min(x_start, x_end), (int)min(y_start, y_end)),
-                cv::Size(x_size, y_size));
+            cv::Rect selected_rect(
+                        cv::Point2i((int)min(x_start, x_end), (int)min(y_start, y_end)),
+                        cv::Size(x_size, y_size));
 
             rectangle(frame_clone, selected_rect, cv::Scalar(150, 200, 150));
         }
@@ -1467,11 +1509,11 @@ extern "C" void cv_draw_object(image sized, float *truth_cpu, int max_boxes, int
 
     if (selected) {
         cv::Rect selected_rect(
-            cv::Point2i((int)min(x_start, x_end), (int)min(y_start, y_end)),
-            cv::Size(x_size, y_size));
+                    cv::Point2i((int)min(x_start, x_end), (int)min(y_start, y_end)),
+                    cv::Size(x_size, y_size));
 
         printf(" x_start = %d, y_start = %d, x_size = %d, y_size = %d \n",
-            x_start.load(), y_start.load(), x_size.load(), y_size.load());
+               x_start.load(), y_start.load(), x_size.load(), y_size.load());
 
         rectangle(frame, selected_rect, cv::Scalar(150, 200, 150));
         cv::imshow(window_name, frame);
@@ -1550,7 +1592,7 @@ extern "C" void show_acnhors(int number_of_boxes, int num_of_clusters, float *re
 void show_opencv_info()
 {
     std::cerr << " OpenCV version: " << CV_VERSION_MAJOR << "." << CV_VERSION_MINOR << "." << CVAUX_STR(CV_VERSION_REVISION) OCV_D
-        << std::endl;
+              << std::endl;
 }
 
 

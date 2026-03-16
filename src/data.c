@@ -257,7 +257,7 @@ void correct_boxes(box_label *boxes, int n, float dx, float dy, float sx, float 
             continue;
         }
         if ((boxes[i].x + boxes[i].w / 2) < 0 || (boxes[i].y + boxes[i].h / 2) < 0 ||
-            (boxes[i].x - boxes[i].w / 2) > 1 || (boxes[i].y - boxes[i].h / 2) > 1)
+                (boxes[i].x - boxes[i].w / 2) > 1 || (boxes[i].y - boxes[i].h / 2) > 1)
         {
             boxes[i].x = 999999;
             boxes[i].y = 999999;
@@ -369,7 +369,7 @@ void fill_truth_region(char *path, float *truth, int classes, int num_boxes, int
 }
 
 int fill_truth_detection(const char *path, int num_boxes, int truth_size, float *truth, int classes, int flip, float dx, float dy, float sx, float sy,
-    int net_w, int net_h)
+                         int net_w, int net_h)
 {
     char labelpath[4096];
     replace_image_to_label(path, labelpath);
@@ -884,8 +884,8 @@ void blend_truth(float *new_truth, int boxes, int truth_size, float *old_truth)
 
 
 void blend_truth_mosaic(float *new_truth, int boxes, int truth_size, float *old_truth, int w, int h, float cut_x, float cut_y, int i_mixup,
-    int left_shift, int right_shift, int top_shift, int bot_shift,
-    int net_w, int net_h, int mosaic_bound)
+                        int left_shift, int right_shift, int top_shift, int bot_shift,
+                        int net_w, int net_h, int mosaic_bound)
 {
     const float lowest_w = 1.F / net_w;
     const float lowest_h = 1.F / net_h;
@@ -1019,9 +1019,9 @@ void blend_truth_mosaic(float *new_truth, int boxes, int truth_size, float *old_
 
         // leave only within the image
         if(left >= 0 && right <= w && top >= 0 && bot <= h &&
-            wb > 0 && wb < 1 && hb > 0 && hb < 1 &&
-            xb > 0 && xb < 1 && yb > 0 && yb < 1 &&
-            wb > lowest_w && hb > lowest_h)
+                wb > 0 && wb < 1 && hb > 0 && hb < 1 &&
+                xb > 0 && xb < 1 && yb > 0 && yb < 1 &&
+                wb > lowest_w && hb > lowest_h)
         {
             new_truth_ptr[0] = xb;
             new_truth_ptr[1] = yb;
@@ -1039,7 +1039,7 @@ void blend_truth_mosaic(float *new_truth, int boxes, int truth_size, float *old_
 #include "http_stream.h"
 
 data load_data_detection(int n, char **paths, int m, int w, int h, int c, int boxes, int truth_size, int classes, int use_flip, int use_gaussian_noise, int use_blur, int use_mixup,
-    float jitter, float resize, float hue, float saturation, float exposure, int mini_batch, int track, int augment_speed, int letter_box, int mosaic_bound, int contrastive, int contrastive_jit_flip, int contrastive_color, int show_imgs)
+                         float jitter, float resize, float hue, float saturation, float exposure, int mini_batch, int track, int augment_speed, int letter_box, int mosaic_bound, int contrastive, int contrastive_jit_flip, int contrastive_color, int show_imgs,int angle_detection)
 {
     const int random_index = random_gen();
     c = c ? c : 3;
@@ -1244,8 +1244,7 @@ data load_data_detection(int n, char **paths, int m, int w, int h, int c, int bo
             if ((min_w_h / 8) < blur && blur > 1) blur = min_w_h / 8;   // disable blur if one of the objects is too small
 
             image ai = image_data_augmentation(src, w, h, pleft, ptop, swidth, sheight, flip, dhue, dsat, dexp,
-                gaussian_noise, blur, boxes, truth_size, truth);
-
+                                               gaussian_noise, blur, boxes, truth_size, truth,angle_detection);
             if (use_mixup == 0) {
                 d.X.vals[i] = ai.data;
                 memcpy(d.y.vals[i], truth, truth_size * boxes * sizeof(float));
@@ -1359,13 +1358,13 @@ void blend_images(image new_img, float alpha, image old_img, float beta)
 {
     int data_size = new_img.w * new_img.h * new_img.c;
     int i;
-    #pragma omp parallel for
+#pragma omp parallel for
     for (i = 0; i < data_size; ++i)
         new_img.data[i] = new_img.data[i] * alpha + old_img.data[i] * beta;
 }
 
 data load_data_detection(int n, char **paths, int m, int w, int h, int c, int boxes, int truth_size, int classes, int use_flip, int gaussian_noise, int use_blur, int use_mixup,
-    float jitter, float resize, float hue, float saturation, float exposure, int mini_batch, int track, int augment_speed, int letter_box, int mosaic_bound, int contrastive, int contrastive_jit_flip, int contrastive_color, int show_imgs)
+                         float jitter, float resize, float hue, float saturation, float exposure, int mini_batch, int track, int augment_speed, int letter_box, int mosaic_bound, int contrastive, int contrastive_jit_flip, int contrastive_color, int show_imgs,int angle_detection)
 {
     const int random_index = random_gen();
     c = c ? c : 3;
@@ -1583,7 +1582,7 @@ void *load_thread(void *ptr)
         *a.d = load_data_region(a.n, a.paths, a.m, a.w, a.h, a.num_boxes, a.classes, a.jitter, a.hue, a.saturation, a.exposure);
     } else if (a.type == DETECTION_DATA){
         *a.d = load_data_detection(a.n, a.paths, a.m, a.w, a.h, a.c, a.num_boxes, a.truth_size, a.classes, a.flip, a.gaussian_noise, a.blur, a.mixup, a.jitter, a.resize,
-            a.hue, a.saturation, a.exposure, a.mini_batch, a.track, a.augment_speed, a.letter_box, a.mosaic_bound, a.contrastive, a.contrastive_jit_flip, a.contrastive_color, a.show_imgs);
+                                   a.hue, a.saturation, a.exposure, a.mini_batch, a.track, a.augment_speed, a.letter_box, a.mosaic_bound, a.contrastive, a.contrastive_jit_flip, a.contrastive_color, a.show_imgs,a.angle_detector);
     } else if (a.type == SWAG_DATA){
         *a.d = load_data_swag(a.paths, a.n, a.classes, a.jitter);
     } else if (a.type == COMPARE_DATA){
@@ -1802,7 +1801,7 @@ data load_data_super(char **paths, int n, int m, int w, int h, int scale)
 }
 
 data load_data_augment(char **paths, int n, int m, char **labels, int k, tree *hierarchy, int use_flip, int min, int max, int w, int h, float angle,
-    float aspect, float hue, float saturation, float exposure, int use_mixup, int use_blur, int show_imgs, float label_smooth_eps, int dontuse_opencv, int contrastive)
+                       float aspect, float hue, float saturation, float exposure, int use_mixup, int use_blur, int show_imgs, float label_smooth_eps, int dontuse_opencv, int contrastive)
 {
     char **paths_stored = paths;
     if(m) paths = get_random_paths(paths, n, m);

@@ -14,6 +14,7 @@ extern "C" {
 typedef void* mat_cv;
 typedef void* cap_cv;
 typedef void* write_cv;
+typedef void* point2f_cv;
 
 //typedef struct mat_cv mat_cv;
 //typedef struct cap_cv cap_cv;
@@ -102,7 +103,7 @@ void draw_train_loss(char *windows_name, mat_cv* img, int img_size, float avg_lo
 image image_data_augmentation(mat_cv* mat, int w, int h,
     int pleft, int ptop, int swidth, int sheight, int flip,
     float dhue, float dsat, float dexp,
-    int gaussian_noise, int blur, int num_boxes, int truth_size, float *truth);
+    int gaussian_noise, int blur, int num_boxes, int truth_size, float *truth, int angle_detector);
 
 // blend two images with (alpha and beta)
 void blend_images_cv(image new_img, float alpha, image old_img, float beta);

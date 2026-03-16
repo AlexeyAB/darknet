@@ -132,6 +132,7 @@ void train_detector(char *datacfg, char *cfgfile, char *weightfile, int *gpus, i
     args.w = net.w;
     args.h = net.h;
     args.c = net.c;
+    args.angle_detector=net.angle_detector;
     args.paths = paths;
     args.n = imgs;
     args.m = plist->size;
