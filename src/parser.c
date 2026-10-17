@@ -1758,7 +1758,7 @@ network parse_network_cfg_custom(char *filename, int batch, int time_steps)
     {
         int size = get_network_input_size(net) * net.batch;
         net.input_state_gpu = cuda_make_array(0, size);
-        if (cudaSuccess == cudaHostAlloc(&net.input_pinned_cpu, size * sizeof(float), cudaHostRegisterMapped)) net.input_pinned_cpu_flag = 1;
+        if (cudaSuccess == cudaHostAlloc((void **)&net.input_pinned_cpu, size * sizeof(float), cudaHostRegisterMapped)) net.input_pinned_cpu_flag = 1;
         else {
             cudaGetLastError(); // reset CUDA-error
             net.input_pinned_cpu = (float*)xcalloc(size, sizeof(float));
